@@ -1,3 +1,4 @@
+import { LoginResponse } from "../stores/useAuth";
 
 export interface TableInfo {
   table_id: string;
@@ -33,6 +34,19 @@ export interface RestureItemsTypes {
     category_name: string;
   }[];
 }
+export interface LoginSessionState {
+  token: string | null;
+  user: {
+    id: string;
+    username: string;
+    name: string;
+    role: string;
+    store: string;
+  } | null;
+
+  setSession: (data: LoginResponse) => void;
+  clearSession: () => void;
+}
 
 
 export interface ServerInfo {
@@ -56,7 +70,13 @@ export interface Permission {
   name: string;
   value: boolean;
 }
-
+export interface Staff {
+  id: string;          
+  user_id: string;     
+  real_name: string;   
+  role_name: string;   
+  staff:[]
+}
 export interface Role {
   id: string;
   name: string;
@@ -70,9 +90,9 @@ export interface Permissions {
   salesRegister: boolean;
   orderDisplay: boolean;
   reports: boolean;
-  wineDisplay:boolean
-
- 
+  wineDisplay:boolean;
+kitchenDisplay:boolean;
+ menuList:boolean;
   [key: string]: boolean | undefined;
 }
 export interface StaffMember {
@@ -94,11 +114,23 @@ export const defaultPermissions: Permissions = {
   orderDisplay: false,
   reports: false,
   wineDisplay: false,
-  seeButtonOne: false,
-  seeButtonTwo: false,
+  placeOrder: false,
+  holdOrder: false,
+   LoadHeldOrders: false,
+  payments: false,
+   trackOrder:false,
+   takeOrder:false,
+  viewMenu:false,
+  kitchenDisplay:false,
+  menuList:false,
 };
 
 export interface Render{
-    seeButtonOne:boolean,
-    seeButtonTwo:boolean
+    placeOrder: boolean;
+  holdOrder: boolean;
+   LoadHeldOrders: boolean;
+  payments: boolean;
+  trackOrder:boolean;
+  takeOrder:boolean;
+   viewMenu:boolean;
 }

@@ -10,8 +10,10 @@ import { StaffMembers } from "../hooks/access";
 const menuItems = [
   { name: "Sales Register", icon: RegisterIcon, permission: "salesRegister" },
   { name: "Order Display", icon: DisplayIcon, permission: "orderDisplay" },
+  { name: "Menu List", icon: DisplayIcon, permission: "menuList" },
   { name: "Reports", icon: ReportIcon, permission: "reports" },
   { name: "Wine Display", icon: ReportIcon, permission: "wineDisplay" },
+  { name: "Kitchen Display", icon: ReportIcon, permission: "kitchenDisplay" },
 ];
 
 import { useInternalHooks } from "../hooks/internal";
@@ -29,12 +31,20 @@ const [staffResponse, setStaffResponse] = useState<StaffResponse>({
     salesRegister: false,
     orderDisplay: false,
     reports: false,
-    wineDisplay:false
-  
+    wineDisplay:false,
+  kitchenDisplay:false,
+  menuList:false
   });
+
+
 const [buttonPerm, setButtonPerm] = useState<Render>({
-  seeButtonOne: false,
-  seeButtonTwo: false,
+  placeOrder: false,
+  holdOrder: false,
+   LoadHeldOrders: false,
+  payments: false,
+  trackOrder:false,
+  takeOrder:false,
+  viewMenu:false
 });
 
 const handleButtonPermChange = (key: keyof Render) => {
@@ -101,7 +111,9 @@ if ("error" in result) {
       salesRegister: false,
       orderDisplay: false,
       reports: false,
-      wineDisplay:false
+      wineDisplay:false,
+      kitchenDisplay:false,
+ menuList:false,
     });
 }
 
@@ -182,20 +194,71 @@ if ("error" in result) {
   <label className="flex items-center gap-2">
     <input
       type="checkbox"
-      checked={buttonPerm.seeButtonOne}
-      onChange={() => handleButtonPermChange("seeButtonOne")}
+      checked={buttonPerm.LoadHeldOrders}
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      onChange={() => handleButtonPermChange("LoadHeldOrders")}
     />
-    See Button One
+   Load Held Orders
   </label>
 
-  <label className="flex items-center gap-2">
+   <label className="flex items-center gap-2">
     <input
       type="checkbox"
-      checked={buttonPerm.seeButtonTwo}
-      onChange={() => handleButtonPermChange("seeButtonTwo")}
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.holdOrder}
+      onChange={() => handleButtonPermChange("holdOrder")}
     />
-    See Button Two
+   Hold Orders
   </label>
+
+   <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.payments}
+      onChange={() => handleButtonPermChange("payments")}
+    />
+   Payments Processing
+  </label>
+
+   <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.placeOrder}
+      onChange={() => handleButtonPermChange("placeOrder")}
+    />
+  Place Orders
+  </label>
+     <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.trackOrder}
+      onChange={() => handleButtonPermChange("trackOrder")}
+    />
+   Track Orders
+  </label>
+       <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.takeOrder}
+      onChange={() => handleButtonPermChange("takeOrder")}
+    />
+   Take Orders
+  </label>
+
+        <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.viewMenu}
+      onChange={() => handleButtonPermChange("viewMenu")}
+    />
+   View Menu
+  </label>
+
 </div>
 
         </div>

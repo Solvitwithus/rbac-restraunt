@@ -1,32 +1,43 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { MenuItemsTypes,Permissions, ServerInfo} from "@/app/components/types"
-interface LoginSession {
-  token: string | null;
-  setToken: (token: string) => void;
-  setUsers: (data: ServerInfo[]) => void; // store as array
-  users: ServerInfo[]; // array type
-  clearToken: () => void;
-  clearUsers: () => void;
+import { defaultPermissions, LoginSessionState, MenuItemsTypes,Permissions, ServerInfo} from "@/app/components/types"
+export interface LoginResponse {
+  status: "SUCCESS" | "ERROR";
+  timestamp: string; // "YYYY-MM-DD HH:mm:ss"
+  token: string;
+  user: {
+    id: string;
+    username: string;
+    name: string;
+    role: string;
+    store: string;
+  };
 }
 
-export const useLoginSession = create<LoginSession>()(
+export const useLoginSession = create<LoginSessionState>()(
   persist(
     (set) => ({
       token: null,
-      setToken: (token) => set({ token }),
-      setUsers: (data) => set({ users: data }),
-      users: [],
-      clearToken: () => set({ token: null }),
-      clearUsers: () => set({ users: [] }),
+      user: null,
+
+      setSession: (data) =>
+        set({
+          token: data.token,
+          user: data.user,
+        }),
+
+      clearSession: () =>
+        set({
+          token: null,
+          user: null,
+        }),
     }),
     {
       name: "login-session",
     }
   )
 );
-
 interface SelectedItemsState {
   selectedItems: MenuItemsTypes[];
   setSelectedItems: (data: MenuItemsTypes[]) => void;
@@ -119,12 +130,7 @@ interface PermissionsStore {
   clearPermissions: () => void;
 }
 
-const defaultPermissions: Permissions = {
-  salesRegister: false,
-  orderDisplay: false,
-  reports: false,
-  wineDisplay:false
-};
+
 
 export const usePermissions = create<PermissionsStore>()(
   persist(

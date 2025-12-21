@@ -75,10 +75,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLoginSession,usePermissions } from "../stores/useAuth";
-
+import Wine from "@/public/wine.svg"
 import { Menu as MenuIcon, X } from "lucide-react";
 import { toast } from "sonner";
-
+import OurMenu from "@/public/download (1).svg"
+import KitchenTrack from "@/public/kds.svg"
 interface LandingPage {
   name: string;
   path: string;
@@ -87,7 +88,7 @@ interface LandingPage {
 }
 
 function Menu() {
-  const { clearToken, clearUsers } = useLoginSession();
+  const {  clearSession } = useLoginSession();
   const { permissions } = usePermissions(); // Get permissions from store
   const currentPath = usePathname();
   const router = useRouter();
@@ -96,9 +97,12 @@ function Menu() {
   // Define all possible menu items
 const allDisplayPanel: LandingPage[] = [
   { name: "Sales Register", path: "/sales-register", icon: HomeIcon, key: "salesRegister" },
-  { name: "Menu List", path: "/stock-list", icon: Kitchen, key: "orderDisplay" },
+  { name: "Menu List", path: "/stock-list", icon: OurMenu, key: "menuList" },
+ 
   { name: "Reports", path: "/reports", icon: Report, key: "reports" },
-  { name: "wine Display", path: "/reports", icon: Report, key: "wineDisplay" },
+   { name: "Kitchen Display", path: "/order-display", icon: KitchenTrack, key: "orderDisplay" },
+  { name: "Wine wall", path: "/winery-display", icon: Wine, key: "wineDisplay" },
+  { name: "Chef Panel", path: "/kitchen-display", icon: Kitchen, key: "kitchenDisplay" },
   
 ];
 
@@ -106,19 +110,20 @@ const displayPanel = allDisplayPanel.filter(
   (item) => permissions[item.key as keyof Permissions] === true
 );
   const logout = () => {
-    clearToken();
-    clearUsers();
+    clearSession()
     localStorage.removeItem("login-session");
     router.push("/");
   };
 
   // Optional: Redirect if no permissions (e.g., to dashboard or error)
   useEffect(() => {
-    if (Object.values(permissions).every((p) => !p)) {
-      toast.error("No access permissions assigned. Contact admin.");
-      router.push("/dashboard"); // or wherever
-    }
-  }, [permissions, router]);
+  if (!localStorage.getItem("login-session")) {
+    toast.warning("No token found")
+    router.push("/");
+  }
+  
+}, [ router]);
+
 
   return (
     <header className="w-full bg-[#F6EFE7] border-b shadow-sm sticky top-0 z-50">
