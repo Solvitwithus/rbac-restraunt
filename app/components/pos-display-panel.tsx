@@ -359,7 +359,7 @@ const handleHold = async () => {
 
   return (
      <div
-  className={`flex flex-col min-h-screen max-h-screen gap-3 items-end w-full ${
+  className={`flex flex-col min-h-screen max-h-screen lg:min-h-0 lg:max-h-none gap-3 items-end w-full ${
     permissions.viewMenu ? "md:w-1/2 " : ""
   }`}
 >
