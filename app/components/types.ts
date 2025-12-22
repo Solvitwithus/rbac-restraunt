@@ -9,6 +9,53 @@ export interface TableInfo {
   available_slots: string;
   status: string;
 }
+export interface DiningSessionDTO {
+  session_id: string;
+  table_id: string;
+  session_date: string;          // YYYY-MM-DD
+  start_time: string;            // YYYY-MM-DD HH:mm:ss
+  end_time: string | null;
+  guest_count: string;
+  status: "active" | "closed" | "cancelled";
+  total_amount: string;          // decimal as string
+  notes: string;
+  created_by: string;
+  session_type: "individual" | "group";
+  table_number: string;
+  table_name: string;
+  capacity: string;
+  duration_formatted: string;    // HH:mm
+  duration_minutes: number;
+}
+export interface OrderDTO {
+  id: string;
+  order_no: string;
+  session_id: string;
+  booking_id: string | null;
+  room_id: string | null;
+  table_id: string;
+  client_name: string;
+  item_code: string;
+  quantity: string;           // decimal string
+  unit_price: string;         // decimal string
+  dept_id: string;
+  order_time: string;         // YYYY-MM-DD HH:mm:ss
+  status: "ordered" | "served" | "cancelled";
+  served_time: string | null;
+  notes: string;
+  invoice_ref: string | null;
+  invoice_date: string | null;
+  billing_status: "pending" | "ready" | "billed";
+  billing_started: string | null;
+  invoice_no: string | null;
+  include_in_bill: "0" | "1";
+  item_description: string;
+  dept_name: string;
+  dept_code: string;
+  table_number: string;
+  wait_minutes: number;
+  line_total: number;
+}
 
 export interface MenuItemsTypes {
   stock_id: string;

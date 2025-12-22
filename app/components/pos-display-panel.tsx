@@ -76,7 +76,7 @@ import Globe from '@/public/food.jpeg';
 import axios from 'axios';
 import Link from 'next/link';
 import { Staff } from './types';
-import Payments from './payments';
+
 import { usePermissions } from '../stores/useAuth';
 
 export interface TableInfo {
@@ -151,7 +151,7 @@ const [orderName, setorderName] = useState<string>("")
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
-  const [showPayments, setShowPayments] = useState(false);
+
   const [heldOrdersOpen, setHeldOrdersOpen] = useState(false);
 const [heldOrders, setHeldOrders] = useState<RestureItemsTypes[]>([]);
 
@@ -562,18 +562,15 @@ const handleHold = async () => {
 
 {
     permissions.payments && (
-           <button
-      type="button"
-      onClick={()=>{
-       setShowPayments(true)
-        toast.success("Hi")
-      }}
-      className="flex-1 p-1 bg-[#4B2E26] py-2 font-semibold text-white rounded-md 
+           <Link
+      
+     href={"/payments"}
+      className="flex-1 p-1 bg-[#4B2E26] text-center py-2 font-semibold text-white rounded-md 
                  shadow-sm cursor-pointer hover:bg-[#3a221d] active:scale-95 transition-all"
     >
       
       Payments
-    </button>
+    </Link>
     )
 }
 
@@ -588,7 +585,7 @@ const handleHold = async () => {
      
         </div>
       </div>
-{showPayments && <Payments />}
+
            {/* Modal */}
 {processOrderModalOpen && (
   <div className="fixed inset-0 z-50 flex items-center justify-center">
