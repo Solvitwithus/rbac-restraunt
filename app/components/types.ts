@@ -27,6 +27,13 @@ export interface DiningSessionDTO {
   duration_formatted: string;    // HH:mm
   duration_minutes: number;
 }
+export interface PaymentTransaction {
+  Auto: string;          // e.g. "101481"
+  name: string;          // Customer name
+  TransID: string;       // Transaction reference
+  TransAmount: string;   // Amount paid (string from API)
+  TransTime: string;     // Timestamp in YYYYMMDDHHMMSS format
+}
 
 export interface PosPaymentResponse {
   id: string;                       // "134"

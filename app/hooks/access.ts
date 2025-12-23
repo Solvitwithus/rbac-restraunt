@@ -457,4 +457,26 @@ export async function GetProcessedTransactions(){
     console.log(e);
     
   }
+
+
+ 
 }
+
+ export async function LoadMpesaTransactions(){
+      try{
+   
+ const formData = new FormData();
+    formData.append("tp", "loadMpesaTransaction");
+    formData.append("cp", "0_");
+    formData.append("id", "2");
+  
+
+    const response = await axios.postForm("https://marvel.digerp.com/test/process.php", formData);
+
+    return response.data;
+  }
+  catch(e:unknown){
+    console.log(e);
+    
+  }
+  }
