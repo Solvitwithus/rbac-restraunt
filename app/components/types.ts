@@ -27,6 +27,40 @@ export interface DiningSessionDTO {
   duration_formatted: string;    // HH:mm
   duration_minutes: number;
 }
+
+export interface PosPaymentResponse {
+  id: string;                       // "134"
+  ptype: "CASH" | string;           // payment type
+  ptotal: string;                   // total paid (string from backend)
+  payments: string | null;          // often "null" as string
+  pitems: string;                   // JSON string of items
+  cp: string;                       // "0_"
+  uname: string;                    // username
+  uid: string;                      // user ID
+  pdate: string;                    // "2025-12-23 14:12:31"
+  print: string;                    // "1"
+  customername: string;             // "CASH SALES"
+  customerid: string;               // "3"
+  booking: string;                  // "1"
+  dispatch: string;                 // "0"
+  salepersonId: string;             // "0"
+  salepersonName: string;
+  unique_identifier: string;        // timestamp string
+  pin: string;
+  walk_in_customer_name: string | null;
+  salesperson_option: string | null;
+  weight_taken: string;             // "0.000"
+  order_no: string;
+  invNo: string;                    // invoice number
+  delNo: string;                    // delivery number
+  posSaleInsertId: string;          // "POS#000000134"
+  qrCode: string;
+  qrDate: string;
+  controlCode: string;
+  middlewareInvoiceNumber: string;
+  weight: number;
+}
+
 export interface OrderDTO {
   id: string;
   order_no: string;
