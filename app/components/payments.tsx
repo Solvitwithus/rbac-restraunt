@@ -631,6 +631,9 @@
 
 
 
+
+
+
 import React, { useEffect, useState } from "react";
 import {
   GetAllActiveSessions,
@@ -693,22 +696,13 @@ export default function PaymentsPage() {
           LoadMpesaTransactions(),
         ]);
 
-        if (sessionsRes.status === "SUCCESS") {
-          setActiveSessions(sessionsRes.sessions || []);
-        }
-
-        if (Array.isArray(historyRes)) {
-          setHistory(historyRes);
-        }
-
-        if (Array.isArray(mpesaRes)) {
-          setMpesaTransactions(mpesaRes);
-        }
+        if (sessionsRes.status === "SUCCESS") setActiveSessions(sessionsRes.sessions || []);
+        if (Array.isArray(historyRes)) setHistory(historyRes);
+        if (Array.isArray(mpesaRes)) setMpesaTransactions(mpesaRes);
       } catch (e) {
         console.error("Error loading data:", e);
       }
     };
-
     fetchData();
   }, []);
 
@@ -742,7 +736,7 @@ export default function PaymentsPage() {
 
   const handleMergeAndAddToCart = async () => {
     if (selectedSessionsInModal.size === 0) {
-      alert("Please select at least one session.");
+      alert("Select at least one session.");
       return;
     }
 
@@ -767,7 +761,7 @@ export default function PaymentsPage() {
     const allOrders = selectedSessions.flatMap(s => sessionOrdersMap[s.session_id] || []);
 
     if (allOrders.length === 0) {
-      alert("No orders in selected sessions.");
+      alert("No orders found.");
       return;
     }
 
@@ -800,56 +794,127 @@ export default function PaymentsPage() {
     setSelectedMpesaTrans(null);
   };
 
-  // Total tendered = cash + mpesa (if selected)
   const totalTendered = cashAmount + (selectedMpesaTrans ? Number(selectedMpesaTrans.TransAmount) : 0);
   const balance = cartTransaction ? cartTransaction.grandTotal - totalTendered : 0;
 
+  // const handlePayment = async () => {
+  //   if (!cartTransaction) return;
+
+  //   try {
+  //     const itemsForBackend = cartTransaction.orders.map(order => ({
+  //       quantity: order.quantity,
+  //       item_option: order.item_description,
+  //       item_option_id: order.item_code || order.id.toString(),
+  //       price: Number(order.unit_price).toFixed(2),
+  //       total: Number(order.line_total),
+  //     }));
+
+  //     const ordersToClear = cartTransaction.orders.map(order => ({
+  //       order_no: order.order_no || "",
+  //       trans_type: "30",
+  //       reference: order.invoice_ref || `REF_${Date.now()}`,
+  //     }));
+
+  //     // Build pospayments array with both CASH and MPESA if used
+  //     const pospayments = [];
+
+  //     // Always add CASH entry (even if amount is 0)
+  //     pospayments.push({
+  //       name: "CASH",
+  //       TransID: Date.now().toString(),
+  //       TransAmount: cashAmount,
+  //       Auto: Date.now().toString(),
+  //       TransTime: Date.now().toString(),
+  //       MSISDN: "",
+  //       Transtype: "CASH",
+  //       Cheque: "",
+  //       p: "0",
+  //     });
+
+  //     // Add M-Pesa if selected
+  //     if (selectedMpesaTrans) {
+  //       pospayments.push({
+  //         name: selectedMpesaTrans.name,
+  //         TransID: selectedMpesaTrans.TransID,
+  //         TransAmount: selectedMpesaTrans.TransAmount,
+  //         Auto: selectedMpesaTrans.Auto,
+  //         TransTime: selectedMpesaTrans.TransTime,
+  //         MSISDN: "",
+  //         Transtype: "MPESA",
+  //         Cheque: "",
+  //         p: "",
+  //       });
+  //     }
+
+  //     const response = await postCashPayment({
+  //       total: cartTransaction.grandTotal,
+  //       items: itemsForBackend,
+  //       ordersToClear,
+  //       customerName: clientDetails.name || "Walk-in",
+  //       customerPin: clientDetails.kra,
+  //       pospayments, // <-- This is the key change!
+  //     });
+
+  //     if (response?.message === "Success" || response?.status === "SUCCESS") {
+  //       alert(`Payment successful! Invoice #${response.invNo || "N/A"}`);
+  //       clearCart();
+  //     } else {
+  //       alert(response?.message || "Payment failed");
+  //     }
+  //   } catch (err: any) {
+  //     alert("Payment error: " + (err.message || "Network issue"));
+  //     console.error(err);
+  //   }
+  // };
+
+
+
   const handlePayment = async () => {
-    if (!cartTransaction) return;
+  if (!cartTransaction) return;
 
-    try {
-      const itemsForBackend = cartTransaction.orders.map(order => ({
-        quantity: order.quantity,
-        item_option: order.item_description,
-        item_option_id: order.item_code || order.id.toString(),
-        price: Number(order.unit_price).toFixed(2),
-        total: Number(order.line_total),
-      }));
+  try {
+    const itemsForBackend = cartTransaction.orders.map(order => ({
+      quantity: order.quantity.toString(),
+      item_option: order.item_description,
+      item_option_id: order.item_code || order.id.toString(),
+      price: Number(order.unit_price).toFixed(2),
+      total: Number(order.line_total),
+    }));
 
-      const ordersToClear = cartTransaction.orders.map(order => ({
-        order_no: order.order_no || "",
-        trans_type: "30",
-        reference: order.invoice_ref || `REF_${Date.now()}`,
-      }));
+    const ordersToClear = cartTransaction.orders.map(order => ({
+      order_no: order.order_no || "",
+      trans_type: "30",
+      reference: order.invoice_ref || `REF_${Date.now()}`,
+      walk_in_customer_name: "",
+    }));
 
-      const paymentData: any = {
-        total: cartTransaction.grandTotal,
-        items: itemsForBackend,
-        ordersToClear,
-        customerName: clientDetails.name || "Walk-in",
-        customerPin: clientDetails.kra,
-      };
+    const response = await postCashPayment({
+      total: cartTransaction.grandTotal,
+      items: itemsForBackend,
+      ordersToClear,
+      customerName: clientDetails.name || "",
+      customerPin: clientDetails.kra || "",
+      cashAmount: cashAmount,
+      mpesaTransaction: selectedMpesaTrans ? {
+        name: selectedMpesaTrans.name,
+        TransID: selectedMpesaTrans.TransID,
+        TransAmount: selectedMpesaTrans.TransAmount,
+        TransTime: selectedMpesaTrans.TransTime,
+        Auto: selectedMpesaTrans.Auto,
+      } : null,
+    });
 
-      // If M-Pesa is used, include mpesaRef
-      if (selectedMpesaTrans) {
-        paymentData.mpesaRef = selectedMpesaTrans.TransID;
-        paymentData.ttp = "MPESA"; // or whatever your backend expects
-      }
-
-      const response = await postCashPayment(paymentData);
-
-      if (response?.message === "Success" || response?.status === "SUCCESS") {
-        alert(`Payment successful! Invoice #${response.invNo || "N/A"}`);
-        clearCart();
-      } else {
-        alert(response?.message || "Payment failed");
-      }
-    } catch (err: any) {
-      alert("Payment error: " + (err.message || "Network error"));
-      console.error(err);
+    if (response?.message === "Success") {
+      alert(`Payment successful! Invoice #${response.invNo}`);
+      clearCart();
+    } else {
+      alert(response?.message || "Payment failed");
     }
-  };
-
+  } catch (err: any) {
+    alert("Payment failed: " + (err.message || "Unknown error"));
+    console.error(err);
+  }
+};
   const selectedCount = selectedSessionsInModal.size;
 
   return (
@@ -889,7 +954,7 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            {/* Center: Current Bill */}
+            {/* Center: Bill */}
             <div className="md:col-span-6 lg:col-span-7">
               {cartTransaction ? (
                 <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -944,7 +1009,7 @@ export default function PaymentsPage() {
               ) : (
                 <div className="bg-white rounded-xl shadow-sm border p-12 text-center text-gray-500">
                   <h3 className="text-2xl font-medium mb-4">No Bill Loaded</h3>
-                  <p>Load active sessions and select tables to start.</p>
+                  <p>Load sessions and select tables to start.</p>
                 </div>
               )}
             </div>
@@ -971,7 +1036,7 @@ export default function PaymentsPage() {
                 <button
                   onClick={handlePayment}
                   disabled={!cartTransaction || balance > 0}
-                  className={`w-full py-4 font-bold rounded-lg text-lg ${
+                  className={`w-full py-4 font-bold rounded-lg text-lg transition ${
                     !cartTransaction || balance > 0
                       ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                       : "bg-rose-600 text-white hover:bg-rose-700"
@@ -1003,7 +1068,7 @@ export default function PaymentsPage() {
                   )}
 
                   <div className="flex justify-between text-xl font-bold border-t pt-4">
-                    <span>{balance > 0 ? "Balance Due" : "Change"}</span>
+                    <span>{balance > 0 ? "Balance Due" : "Change Due"}</span>
                     <span className={balance > 0 ? "text-red-600" : "text-green-600"}>
                       Ksh {Math.abs(balance).toFixed(2)}
                     </span>
@@ -1016,9 +1081,11 @@ export default function PaymentsPage() {
 
                 <button
                   onClick={() => setCashAmountModal(true)}
-                  className="w-full text-left px-5 py-4 border rounded-lg hover:bg-gray-50 mb-3 font-medium"
+                  className={`w-full text-left px-5 py-4 border rounded-lg hover:bg-gray-50 mb-3 font-medium ${
+                    cashAmount > 0 ? "bg-blue-50 border-blue-500" : ""
+                  }`}
                 >
-                  Cash
+                  Cash {cashAmount > 0 && `(Ksh ${cashAmount.toFixed(2)})`}
                 </button>
 
                 <button
@@ -1071,13 +1138,13 @@ export default function PaymentsPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b flex justify-between items-center">
-              <h3 className="text-xl font-bold">Select M-Pesa Payment</h3>
+              <h3 className="text-xl font-bold">Select M-Pesa Transaction</h3>
               <button onClick={() => { setMpesaModal(false); setSelectedMpesaTrans(null); }} className="text-3xl">&times;</button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
               {mpesaTransactions.length === 0 ? (
-                <p className="text-center text-gray-500 py-10">No M-Pesa transactions found</p>
+                <p className="text-center text-gray-500 py-10">No M-Pesa transactions</p>
               ) : (
                 <div className="space-y-3">
                   {mpesaTransactions.map(tx => (
@@ -1088,12 +1155,10 @@ export default function PaymentsPage() {
                         setMpesaModal(false);
                       }}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                        selectedMpesaTrans?.TransID === tx.TransID
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-300 hover:bg-gray-50"
+                        selectedMpesaTrans?.TransID === tx.TransID ? "border-green-500 bg-green-50" : "border-gray-300 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between">
                         <div>
                           <p className="font-semibold">{tx.name}</p>
                           <p className="text-sm text-gray-600">Ref: {tx.TransID}</p>
@@ -1110,10 +1175,7 @@ export default function PaymentsPage() {
             </div>
 
             <div className="p-6 border-t">
-              <button
-                onClick={() => { setMpesaModal(false); setSelectedMpesaTrans(null); }}
-                className="w-full py-3 border rounded-lg font-medium"
-              >
+              <button onClick={() => { setMpesaModal(false); setSelectedMpesaTrans(null); }} className="w-full py-3 border rounded-lg font-medium">
                 Cancel
               </button>
             </div>
@@ -1136,9 +1198,7 @@ export default function PaymentsPage() {
                   <div
                     key={session.session_id}
                     className={`border-2 rounded-xl overflow-hidden ${
-                      selectedSessionsInModal.has(session.session_id)
-                        ? "border-amber-500 shadow-lg"
-                        : "border-gray-200"
+                      selectedSessionsInModal.has(session.session_id) ? "border-amber-500 shadow-lg" : "border-gray-200"
                     }`}
                   >
                     <div

@@ -218,6 +218,7 @@ export async function CreateOrderItem({
   client_name?: string;
   notes?: string;
 }) {
+
   console.log("Hi i am touched");
 
   try {
@@ -338,12 +339,117 @@ export async function UpdateItemstatus({
 
 
 
-  export async function postCashPayment({
+//   export async function postCashPayment({
+//   total,
+//   items, // Array of items (from posdesc structure)
+//   ordersToClear, // Array of orders to clear after payment
+//   customerName = "",
+//   customerPin = "",
+//   mpesaRefCode,
+  
+// }: {
+//   total: number;
+//   items: Array<{
+//     quantity: string;
+//     item_option: string;
+//     item_option_id: string;
+//     price: string;
+//     total: number;
+//     tax?: string;
+//     discount?: string;
+//     // Add other fields if needed later
+//   }>;
+//   ordersToClear: Array<{
+//     order_no?: string;
+//     trans_type?: string;
+//     reference?: string;
+//     walk_in_customer_name?: string;
+//   }>;
+//   customerName?: string;
+//   customerPin?: string;
+//   mpesaRefCode?:string;
+  
+// }) {
+//   try {
+//     const formData = new FormData();
+
+//     // Required fixed fields
+//     formData.append("tp", "booking-cash-payment");
+//     formData.append("cp", "0_");
+//     formData.append("id", "104"); // Seems constant in your examples
+//     formData.append("ttp", "CASH");
+//     formData.append("total", total.toString());
+
+//     // Payment record
+//     const paymentRecord = {
+//       name: "CASH",
+//       TransID: Date.now() || mpesaRefCode, // Unique timestamp-based ID
+//       TransAmount: total,
+//       Auto: Date.now(),
+//       TransTime: Date.now(),
+//       MSISDN: "",
+//       Transtype: "CASH",
+//       Cheque: "",
+//       p: "0",
+//     };
+//     formData.append("pospayments", JSON.stringify([paymentRecord]));
+
+//     // Items description (posdesc)
+//     const posdescItems = items.map((item) => ({
+//       quantity: item.quantity,
+//       quantityAval: "1", // You can adjust logic if needed
+//       booking_id: "",
+//       customer_option: "CASH SALES",
+//       customer_option_id: "3",
+//       booking_type: "",
+//       discount: item.discount || "0",
+//       mode_prices: "1",
+//       kit: "0",
+//       batch_no: "",
+//       tax: item.tax || "0",
+//       item_option: item.item_option,
+//       item_option_id: item.item_option_id,
+//       rate: "8", // Assuming standard rate
+//       deposit: "",
+//       total: item.total,
+//       price: item.price,
+//       posBatchSelect: "",
+//       bottles_issued: "",
+//       bottles_returned: "",
+//       fsalesp: "",
+//     }));
+//     formData.append("posdesc", JSON.stringify(posdescItems));
+
+//     // Optional fields
+//     formData.append("uname", "digisoft_support");
+//     formData.append("cpbooking_id", "");
+//     formData.append("cust_name", customerName ||"");
+//     formData.append("cust_pin", customerPin || "");
+//     formData.append("unique_identifier", Date.now().toString());
+
+//     // Orders to clear after payment
+//     formData.append("orders_to_clear", JSON.stringify(ordersToClear));
+
+//     const response = await axios.postForm("https://marvel.digerp.com/test/process.php", formData);
+
+//     return response.data;
+//   } catch (error: any) {
+//     console.error("Error posting cash payment:", error);
+//     throw error?.response?.data || { message: "Payment failed" };
+//   }
+
+// }
+
+// hooks/access.ts
+
+export async function postCashPayment({
   total,
-  items, // Array of items (from posdesc structure)
-  ordersToClear, // Array of orders to clear after payment
+  items,
+  ordersToClear,
   customerName = "",
   customerPin = "",
+  cashAmount = 0,
+  mpesaTransaction = null, // { name, TransID, TransAmount, TransTime, Auto }
 }: {
   total: number;
   items: Array<{
@@ -352,9 +458,6 @@ export async function UpdateItemstatus({
     item_option_id: string;
     price: string;
     total: number;
-    tax?: string;
-    discount?: string;
-    // Add other fields if needed later
   }>;
   ordersToClear: Array<{
     order_no?: string;
@@ -364,47 +467,74 @@ export async function UpdateItemstatus({
   }>;
   customerName?: string;
   customerPin?: string;
+  cashAmount?: number;
+  mpesaTransaction?: {
+    name: string;
+    TransID: string;
+    TransAmount: string;
+    TransTime: string;
+    Auto: string;
+  } | null;
 }) {
   try {
     const formData = new FormData();
 
-    // Required fixed fields
     formData.append("tp", "booking-cash-payment");
     formData.append("cp", "0_");
-    formData.append("id", "104"); // Seems constant in your examples
+    formData.append("id", "104");
     formData.append("ttp", "CASH");
     formData.append("total", total.toString());
 
-    // Payment record
-    const paymentRecord = {
+    const now = Date.now().toString();
+
+    const pospayments: any[] = [];
+
+    // Always add CASH entry
+    pospayments.push({
       name: "CASH",
-      TransID: Date.now(), // Unique timestamp-based ID
-      TransAmount: total,
-      Auto: Date.now(),
-      TransTime: Date.now(),
+      TransID: now,
+      TransAmount: cashAmount,
+      Auto: now,
+      TransTime: now,
       MSISDN: "",
       Transtype: "CASH",
       Cheque: "",
       p: "0",
-    };
-    formData.append("pospayments", JSON.stringify([paymentRecord]));
+    });
 
-    // Items description (posdesc)
+    // Add M-Pesa if provided
+    if (mpesaTransaction) {
+      pospayments.push({
+        name: mpesaTransaction.name,
+        TransID: mpesaTransaction.TransID,
+        TransAmount: mpesaTransaction.TransAmount,
+        TransTime: mpesaTransaction.TransTime,
+        Transtype: "MPESA",
+        Auto: mpesaTransaction.TransID,
+        MSISDN: "",
+        Cheque: "",
+        p: "",
+      });
+    }
+
+    formData.append("pospayments", JSON.stringify(pospayments));
+
+    // posdesc items
     const posdescItems = items.map((item) => ({
       quantity: item.quantity,
-      quantityAval: "1", // You can adjust logic if needed
+      quantityAval: "1",
       booking_id: "",
       customer_option: "CASH SALES",
       customer_option_id: "3",
       booking_type: "",
-      discount: item.discount || "0",
+      discount: "0",
       mode_prices: "1",
       kit: "0",
       batch_no: "",
-      tax: item.tax || "0",
+      tax: "0",
       item_option: item.item_option,
       item_option_id: item.item_option_id,
-      rate: "8", // Assuming standard rate
+      rate: "8",
       deposit: "",
       total: item.total,
       price: item.price,
@@ -413,28 +543,25 @@ export async function UpdateItemstatus({
       bottles_returned: "",
       fsalesp: "",
     }));
+
     formData.append("posdesc", JSON.stringify(posdescItems));
 
-    // Optional fields
-    formData.append("uname", "digisoft_support");
+    formData.append("uname", "digisoft_suppor");
     formData.append("cpbooking_id", "");
-    formData.append("cust_name", customerName ||"");
-    formData.append("cust_pin", customerPin || "");
-    formData.append("unique_identifier", Date.now().toString());
+    formData.append("cust_name", customerName);
+    formData.append("cust_pin", customerPin);
+    formData.append("unique_identifier", now);
 
-    // Orders to clear after payment
     formData.append("orders_to_clear", JSON.stringify(ordersToClear));
 
     const response = await axios.postForm("https://marvel.digerp.com/test/process.php", formData);
 
     return response.data;
   } catch (error: any) {
-    console.error("Error posting cash payment:", error);
+    console.error("Payment error:", error);
     throw error?.response?.data || { message: "Payment failed" };
   }
-
 }
-
 
 
 export async function GetProcessedTransactions(){
