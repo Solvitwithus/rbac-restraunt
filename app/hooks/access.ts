@@ -296,6 +296,32 @@ export async function GetPerSessionOrders(
   }
 }
 
+export async function CloseSession(
+  {
+    session_id
+  }:{
+   session_id:string; 
+  }
+){
+ try{
+  const formData = new FormData();
+  formData.append("tp","close_session");
+  formData.append("cp", "0_");
+  formData.append("session_id", session_id);
+
+    const response = await axios.postForm(
+      process.env.NEXT_PUBLIC_BASEURL as string,
+      formData
+    );
+
+    return response.data;
+  }
+  catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+}
+
 interface UpdateStatusResponse {
   status: "SUCCESS" | "ERROR";
   message?: string;
