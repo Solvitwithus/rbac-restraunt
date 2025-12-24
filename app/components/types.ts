@@ -34,7 +34,19 @@ export interface PaymentTransaction {
   TransAmount: string;   // Amount paid (string from API)
   TransTime: string;     // Timestamp in YYYYMMDDHHMMSS format
 }
+export interface Department {
+  dept_id: string;        // "3", "2", etc. (comes as string)
+  dept_code: string;      // "002", "001"
+  dept_name: string;      // "Bar", "Kitchen"
+  description: string;    // "Bar", "taking orders"
+  dimension_id: string;   // "2", "23"
+  is_active: string;      // "1" or "0" (typically string from backend)
+}
 
+export interface DepartmentsResponse {
+  status: "SUCCESS" | "ERROR";  // or string if you prefer looser typing
+  departments: Department[];
+}
 export interface PosPaymentResponse {
   id: string;                       // "134"
   ptype: "CASH" | string;           // payment type
@@ -211,6 +223,7 @@ export const defaultPermissions: Permissions = {
   viewMenu:false,
   kitchenDisplay:false,
   menuList:false,
+  totalPlusActionButtons:false
 };
 
 export interface Render{
@@ -221,4 +234,5 @@ export interface Render{
   trackOrder:boolean;
   takeOrder:boolean;
    viewMenu:boolean;
+   totalPlusActionButtons:boolean;
 }

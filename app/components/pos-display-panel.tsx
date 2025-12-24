@@ -67,7 +67,7 @@
  */
 import React, { useEffect, useState, useMemo } from 'react';
 import { Pause, PlayIcon, Search, SidebarCloseIcon, X,LockIcon ,Trash2} from 'lucide-react';
-import { CreateOrderItem, SessionCreation, RestrauntTables, StaffMembers } from '@/app/hooks/access';
+import { CreateOrderItem, SessionCreation, RestrauntTables, StaffMembers,GetDepartments } from '@/app/hooks/access';
 import { useSelectedData } from '../stores/useAuth';
 import { getMenu } from '@/app/hooks/access';
 import { toast } from 'sonner';
@@ -75,7 +75,7 @@ import Image from 'next/image';
 import Globe from '@/public/food.jpeg';
 import axios from 'axios';
 import Link from 'next/link';
-import { Staff } from './types';
+import { Department, DepartmentsResponse, Staff } from './types';
 
 import { usePermissions } from '../stores/useAuth';
 
@@ -151,32 +151,42 @@ const [orderName, setorderName] = useState<string>("")
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
-
+const [departments, setdepartments] = useState<DepartmentsResponse | null>(null)
   const [heldOrdersOpen, setHeldOrdersOpen] = useState(false);
-const [heldOrders, setHeldOrders] = useState<RestureItemsTypes[]>([]);
-
-  // Fetch tables
-  useEffect(() => {
+const [heldOrders, setHeldOrders] = useState<Department[]>([]);
     const fetchTables = async () => {
       try {
         
         const res = await RestrauntTables();
         if (res.status === "SUCCESS") {
+          
           setTables(res.tables || []);
+          console.log("my",res);
+          
+          
         }
       } catch (e) {
         console.error("Failed to fetch tables", e);
       }
     };
-    fetchTables();
+  // Fetch tables
+  useEffect(() => {
 
+    const fetchDepartments =async()=>{
+      const resp = await GetDepartments()
+      setdepartments(resp.departments)
+      console.log("dep",resp.departments);
+      
+    }
+    fetchTables();
+fetchDepartments()
 
     const fetchStaff = async()=>{
          try {
         
         const res = await StaffMembers();
         if (res?.status === "SUCCESS") {
-          setstaffMembers(res?.staff);
+          setstaffMembers(res?.staff || []);
         }
       } catch (e) {
         console.error("Failed to fetch tables", e);
@@ -233,17 +243,56 @@ const [heldOrders, setHeldOrders] = useState<RestureItemsTypes[]>([]);
     });
     return counts;
   }, [selectedItems]);
+console.log("drive",{selectedTable,tables});
 
   const total = selectedItems.reduce((sum, i) => sum + i.price, 0).toFixed(2);
+const selectedTableInfo = useMemo(() => {
+  return tables.find(table => table.table_id === Number(selectedTable)  ) || null;
+}, [tables, selectedTable]);
+
+const availableSlots = selectedTableInfo 
+  ? Number(selectedTableInfo.available_slots?.toString().trim()) || 0 
+  : 0;
+
+const hasEnoughSlots = numGuests > 0 && numGuests <= availableSlots;
+console.log("slots",hasEnoughSlots);
 
  const handleProcessOrder = async () => {
-  if (!selectedTable || numGuests <= 0 || selectedItems.length === 0) {
-    toast.error("Please select table, guests, and add items!");
-    return;
-  }
+  setLoading(true)
+ 
 
   try {
-    setLoading(true);
+ if (selectedItems.length === 0) {
+  toast.warning("Please add items to the order");
+  return;
+}
+
+if (!selectedTable) {
+  toast.warning("Please select a table");
+  return;
+}
+
+if (numGuests <= 0) {
+  toast.warning("Please enter number of guests");
+  return;
+}
+
+if (!hasEnoughSlots) {
+  toast.warning(
+    `Only ${availableSlots} seat${availableSlots === 1 ? '' : 's'} available. You've Exceeded Limit!`
+  );
+  setNumGuests(availableSlots)
+  return;
+}
+if(remarks===""){
+   toast.warning("Please select a department to direct the order to");
+  return;
+}
+ console.log("see",{selectedTable,
+      numGuests,
+      sessionType,
+      remarks} );
+ 
 
     // 1️⃣ Create session
     const data = await SessionCreation(
@@ -261,10 +310,13 @@ const [heldOrders, setHeldOrders] = useState<RestureItemsTypes[]>([]);
     const sessionID = data.session_id;
  
     toast.success(`Session with id: ${sessionID} created`);
-
+setSelectedTable('');
+setNumGuests(0);
+setRemarks('');
+setSessionType('');
     setProcessOrderModalOpen(false);
 
-    
+    clearSelectedItems()
     const groupedItems = selectedItems.reduce((acc: any, item) => {
       if (!acc[item.stock_id]) {
         acc[item.stock_id] = { ...item, quantity: 1 };
@@ -302,7 +354,7 @@ const [heldOrders, setHeldOrders] = useState<RestureItemsTypes[]>([]);
     console.error(error);
   } finally {
     setLoading(false);
-    clearSelectedItems()
+    
   }
 };
 
@@ -327,6 +379,7 @@ const handleHold = async () => {
     if (response.data.status === "SUCCESS") {
     toast.success("Order held successfully");
     setholdOrderSnip(false);
+
     clearSelectedItems();
     setorderName("");
     }
@@ -475,15 +528,17 @@ const handleHold = async () => {
       </div>)}
 
       {/* Totals & Action Buttons */}
-      <div className="w-full lg:w-[85%] bg-[#F6EFE7] border border-red-600/30 rounded-xl p-5 shadow">
+      {
+        permissions.totalPlusActionButtons && (
+<div className="w-full lg:w-[85%] bg-[#F6EFE7] border border-red-600/30 rounded-xl p-5 shadow">
         <div className="space-y-3 mb-5">
           <div className="flex justify-between text-lg">
             <span className="font-bold">Total:</span>
             <span className="font-bold text-green-600">KSHs: {total}</span>
           </div>
           <div className="hidden md:flex justify-between text-lg">
-  <span className="font-bold">Payable:</span>
-  <span className="font-bold text-green-600">KSHs: {total}</span>
+  <span className="font-bold">Discount:</span>
+  <span className="font-bold text-green-600">KSHs: 0.00</span>
 </div>
 
          
@@ -585,6 +640,9 @@ const handleHold = async () => {
      
         </div>
       </div>
+        )
+      }
+      
 
            {/* Modal */}
 {processOrderModalOpen && (
@@ -610,7 +668,7 @@ const handleHold = async () => {
           <option value="">Select Table to Serve</option>
           {tables?.map((val) => (
             <option key={val.table_id} value={val.table_id}>
-              {val.table_name} - {val.table_number} - {val.status}
+              {val.table_name} - {val.available_slots} of {val.capacity} Available
             </option>
           ))}
         </select>
@@ -673,14 +731,32 @@ const handleHold = async () => {
         />
 
         {/* Remarks */}
-        <label className="text-[#4B2E26] font-semibold">Remarks</label>
-        <input
-          type="text"
-          placeholder="Add remarks"
-          className="w-full border border-[#1E3932]/30 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#099c7f]"
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
-        />
+        <label className="text-[#4B2E26] font-semibold">Department</label>
+        
+ <select
+  value={remarks}
+  onChange={(e) => setRemarks(e.target.value)}
+  required // Native HTML validation
+  className="w-full appearance-none bg-white border border-[#1E3932]/30 rounded-md px-4 py-3 pr-10 text-gray-700 
+             focus:outline-none focus:ring-2 focus:ring-[#099c7f] focus:border-transparent 
+             hover:border-[#1E3932]/50 transition-all duration-200 cursor-pointer"
+>
+  {/* This option is disabled + hidden from selection */}
+  <option value="" disabled >
+    Select a department
+  </option>
+  {departments.length > 0 ? (
+    departments.map((dept) => (
+      <option key={dept.dept_id} value={dept.dept_name}>
+        {dept.dept_name}
+      </option>
+    ))
+  ) : (
+    <option value="" disabled>
+      No departments available
+    </option>
+  )}
+</select>
 
         {/* Session Type */}
         <label className="text-[#4B2E26] font-semibold">Select Session Type</label>
@@ -703,14 +779,18 @@ const handleHold = async () => {
       {/* Buttons */}
       <div className="flex flex-col gap-2 w-full mt-3">
         {/* Process Order */}
-        <button
-          type="button"
-          disabled={loading}
-          onClick={handleProcessOrder}
-          className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] py-2 font-semibold text-[#1E3932] rounded-md shadow-md hover:bg-[#c9a034] active:scale-95 transition-all"
-        >
-          {loading? "Processing Order":"Process Order"}
-        </button>
+     <button
+  type="button"
+  disabled={loading}
+  onClick={handleProcessOrder}
+  className={`w-full flex items-center justify-center gap-2 py-2 font-semibold text-[#1E3932] rounded-md shadow-md transition-all active:scale-95 ${
+    loading
+      ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+      : "bg-[#D4AF37] hover:bg-[#c9a034]"
+  }`}
+>
+  {loading ? "Processing Order..." : "Process Order"}
+</button>
 
         {/* Cancel Button */}
         <button

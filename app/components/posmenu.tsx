@@ -100,9 +100,9 @@ const allDisplayPanel: LandingPage[] = [
   { name: "Menu List", path: "/stock-list", icon: OurMenu, key: "menuList" },
  
   { name: "Reports", path: "/reports", icon: Report, key: "reports" },
-   { name: "Kitchen Display", path: "/order-display", icon: KitchenTrack, key: "orderDisplay" },
+   { name: "Kitchen Display", path: "/kitchen-display", icon: KitchenTrack, key: "orderDisplay" },
   { name: "Wine wall", path: "/winery-display", icon: Wine, key: "wineDisplay" },
-  { name: "Chef Panel", path: "/kitchen-display", icon: Kitchen, key: "kitchenDisplay" },
+  { name: "Chef Panel", path: "/order-display", icon: Kitchen, key: "kitchenDisplay" },
   
 ];
 

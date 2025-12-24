@@ -2,638 +2,6 @@
 
 
 
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   GetAllActiveSessions,
-//   GetPerSessionOrders,
-//   postCashPayment,GetProcessedTransactions,LoadMpesaTransactions } from "../hooks/access"
-// import { DiningSessionDTO, OrderDTO, PaymentTransaction, PosPaymentResponse } from "./types"; // Adjust if needed
-
-// interface CartTransaction {
-//   sessions: DiningSessionDTO[];
-//   orders: OrderDTO[];
-//   subtotal: number;
-//   tax: number; // 4.78%
-//   tips: number;
-//   grandTotal: number;
-//   displayLabel: string;
-// }
-
-// export default function PaymentsPage() {
-//   const [activeSessions, setActiveSessions] = useState<DiningSessionDTO[]>([]);
-//   const [selectedSessionsInModal, setSelectedSessionsInModal] = useState<Set<string>>(new Set());
-//   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
-//   const [sessionOrdersMap, setSessionOrdersMap] = useState<Record<string, OrderDTO[]>>({});
-//   const [ordersLoading, setOrdersLoading] = useState<string | null>(null);
-//   const [showSessionsModal, setShowSessionsModal] = useState(false);
-//   const [cashAmount, setCashAmount] = useState<number>(0);
-//   const [cashAmountModal, setCashAmountModal] = useState(false);
-// const [history, sethistory] = useState<PosPaymentResponse[]>([])
-//   const [clientDetails, setClientDetails] = useState({ name: "", kra: "" });
-// const [mpesaTransactions, setmpesaTransactions] = useState<PaymentTransaction[]>([])
-//   const [cartTransaction, setCartTransaction] = useState<CartTransaction | null>(null);
-// const [mpesaModal, setMpesaModal] = useState(false)
-// const [selectedMpesaTrans, setselectedMpesaTrans] = useState("")
-//   const handleClientDetails = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const { name, value } = e.target;
-//     setClientDetails(prev => ({ ...prev, [name]: value }));
-//   };
-
-//   // Load active sessions on mount
-//   useEffect(() => {
-//     const fetchSessions = async () => {
-//       try {
-//         const res = await GetAllActiveSessions();
-//         if (res.status === "SUCCESS" && Array.isArray(res.sessions)) {
-//           setActiveSessions(res.sessions);
-//         }
-//       } catch (e) {
-//         console.error("Failed to load sessions:", e);
-//       }
-//     };
-
-//     const fetchProcessedTransactions = async ()=>{
-//       try{
-// const res = await GetProcessedTransactions()
-// console.log("pppoiui",res);
-
-// sethistory(res ??[])
-//       }
-// catch (e) {
-//         console.error("Failed to load sessions:", e);
-//       }
-//     }
-
-//     const fetchMpesaTransactions = async ()=>{
-//       try{
-// const res = await LoadMpesaTransactions()
-
-
-// setmpesaTransactions(res ??[])
-//       }
-// catch (e) {
-//         console.error("Failed to load sessions:", e);
-//       }
-//     }
-//     fetchSessions();
-//     fetchProcessedTransactions();
-//     fetchMpesaTransactions();
-//   }, []);
-
-//   // Expand/collapse and load orders
-//   const loadOrdersForSession = async (sessionId: string) => {
-//     if (sessionOrdersMap[sessionId]) {
-//       setExpandedSessionId(expandedSessionId === sessionId ? null : sessionId);
-//       return;
-//     }
-
-//     setOrdersLoading(sessionId);
-//     try {
-//       const res = await GetPerSessionOrders({ session_id: sessionId });
-//       if (res.status === "SUCCESS") {
-//         setSessionOrdersMap(prev => ({ ...prev, [sessionId]: res.orders || [] }));
-//       }
-//       setExpandedSessionId(sessionId);
-//     } catch (e) {
-//       console.error(e);
-//       setSessionOrdersMap(prev => ({ ...prev, [sessionId]: [] }));
-//     } finally {
-//       setOrdersLoading(null);
-//     }
-//   };
-
-//   const toggleSessionSelection = (sessionId: string) => {
-//     setSelectedSessionsInModal(prev => {
-//       const newSet = new Set(prev);
-//       newSet.has(sessionId) ? newSet.delete(sessionId) : newSet.add(sessionId);
-//       return newSet;
-//     });
-//   };
-
-//   // Add selected (or merged) sessions to cart
-//   const handleMergeAndAddToCart = async () => {
-//     if (selectedSessionsInModal.size === 0) {
-//       alert("Please select at least one session.");
-//       return;
-//     }
-
-//     const sessionsToLoad = activeSessions.filter(
-//       s => selectedSessionsInModal.has(s.session_id) && !sessionOrdersMap[s.session_id]
-//     );
-
-//     if (sessionsToLoad.length > 0) {
-//       setOrdersLoading("multiple");
-//       await Promise.all(
-//         sessionsToLoad.map(async s => {
-//           try {
-//             const res = await GetPerSessionOrders({ session_id: s.session_id });
-//             if (res.status === "SUCCESS") {
-//               setSessionOrdersMap(prev => ({ ...prev, [s.session_id]: res.orders || [] }));
-//             }
-//           } catch (e) {
-//             console.error(e);
-//           }
-//         })
-//       );
-//       setOrdersLoading(null);
-//     }
-
-//     const selectedSessions = activeSessions.filter(s => selectedSessionsInModal.has(s.session_id));
-//     const allOrders = selectedSessions.flatMap(s => sessionOrdersMap[s.session_id] || []);
-
-//     if (allOrders.length === 0) {
-//       alert("Selected sessions have no orders yet.");
-//       return;
-//     }
-
-//     const subtotal = allOrders.reduce((sum, o) => sum + Number(o.line_total || 0), 0);
-//     const tax = Number((subtotal * 0.0478).toFixed(2));
-//     const tips = 200;
-//     const grandTotal = Number((subtotal + tax + tips).toFixed(2));
-
-//     const tableLabels = selectedSessions.map(s => `${s.table_name.trim()} #${s.table_number}`).join(", ");
-//     const displayLabel = selectedSessions.length === 1 ? tableLabels : `Multiple Tables: ${tableLabels}`;
-
-//     setCartTransaction({
-//       sessions: selectedSessions,
-//       orders: allOrders,
-//       subtotal,
-//       tax,
-//       tips,
-//       grandTotal,
-//       displayLabel,
-//     });
-
-//     setShowSessionsModal(false);
-//     setSelectedSessionsInModal(new Set());
-//     setExpandedSessionId(null);
-//   };
-
-//   const clearCart = () => {
-//     setCartTransaction(null);
-//     setCashAmount(0);
-//   };
-
-//   const balance = cartTransaction ? cartTransaction.grandTotal - cashAmount : 0;
-// const mpesaBalance = cartTransaction ? cartTransaction.grandTotal - selectedMpesaTrans.TransAmount : 0;
-//   const handlePayment = async () => {
-//     if (!cartTransaction) return;
-
-//     try {
-//       const itemsForBackend = cartTransaction.orders.map(order => ({
-//         quantity: order.quantity,
-//         item_option: order.item_description,
-//         item_option_id: order.item_code || order.id.toString(),
-//         price: Number(order.unit_price).toFixed(2),
-//         total: Number(order.line_total),
-//       }));
-
-//       const ordersToClear = cartTransaction.orders.map(order => ({
-//         order_no: order.order_no || "",
-//         trans_type: "30",
-//         reference: order.invoice_ref || `REF_${Date.now()}`,
-//       }));
-
-//       const response = await postCashPayment({
-//         total: cartTransaction.grandTotal,
-//         items: itemsForBackend,
-//         ordersToClear,
-//         customerName: clientDetails.name,
-//         customerPin: clientDetails.kra,
-//       });
-
-//       if (response?.status === "SUCCESS") {
-//         alert("Payment processed successfully!");
-//         clearCart();
-//       } else {
-//         alert(response?.message || "Payment failed");
-//       }
-//     } catch (err: any) {
-//       alert("Error: " + (err.message || "Unknown"));
-//       console.error(err);
-//     }
-//   };
-
-//   const selectedCount = selectedSessionsInModal.size;
-
-//   return (
-//     <>
-//       <div className="bg-[#F7F5EE]">
-//         <div className="p-4 md:p-6 lg:p-6">
-//           <div className="grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-6">
-//             {/* Left Panel */}
-//             <div className="md:col-span-2 space-y-6 border-r border-black/30 pr-2">
-//               <button
-//                 onClick={() => setShowSessionsModal(true)}
-//                 className="w-full py-4 bg-amber-700 text-white font-bold rounded-lg hover:bg-amber-800 transition flex items-center justify-center gap-3"
-//               >
-//                 Load Active Sessions
-//               </button>
-
-//                {history.length === 0 ? (
-//     <p className="text-sm text-gray-500 text-center">
-//       No payment history
-//     </p>
-//   ) : (
-//     history.map((item) => (
-//       <div
-//         key={item.id}
-//         className="bg-white border border-gray-200 rounded-lg p-3 hover:bg-amber-50 cursor-pointer transition"
-//       >
-//         <div className="flex justify-between items-center">
-//           <span className="font-bold text-sm">
-//             Invoice #{item.invNo}
-//           </span>
-//           <span className="text-xs text-gray-500">
-//             {item.pdate}
-//           </span>
-//         </div>
-
-//         <div className="flex justify-between mt-2 text-sm">
-//           <span className="text-gray-700">
-//             {item.ptype}
-//           </span>
-//           <span className="font-bold text-amber-900">
-//             Ksh {Number(item.ptotal).toFixed(2)}
-//           </span>
-//         </div>
-
-//         <div className="text-xs text-gray-500 mt-1">
-//           Order #{item.order_no}
-//         </div>
-//       </div>
-//     ))
-//   )}
-
-           
-//             </div>
-
-//             {/* Center Panel */}
-//             <div className="md:col-span-6 lg:col-span-7">
-//               {cartTransaction ? (
-//                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-//                   <div className="flex justify-between items-start mb-6">
-//                     <div>
-//                       <h2 className="text-2xl font-bold">{cartTransaction.displayLabel}</h2>
-//                       <p className="text-gray-600 mt-1">
-//                         {cartTransaction.sessions.length} table(s) • {cartTransaction.orders.length} item(s)
-//                       </p>
-//                     </div>
-//                     <div className="text-right">
-//                       <p className="text-3xl font-bold text-amber-900">
-//                         Ksh {cartTransaction.grandTotal.toFixed(2)}
-//                       </p>
-//                     </div>
-//                   </div>
-
-//                   <div className="overflow-x-auto">
-//                     <table className="w-full text-sm">
-//                       <thead className="bg-gray-100">
-//                         <tr>
-//                           <th className="px-4 py-3 text-left">Item</th>
-//                           <th className="px-4 py-3 text-center">Qty</th>
-//                           <th className="px-4 py-3 text-right">Price</th>
-//                           <th className="px-4 py-3 text-right">Total</th>
-//                         </tr>
-//                       </thead>
-//                       <tbody>
-//                         {cartTransaction.orders.map((order, i) => (
-//                           <tr key={i} className="border-t">
-//                             <td className="px-4 py-3">{order.item_description}</td>
-//                             <td className="px-4 py-3 text-center">{order.quantity}</td>
-//                             <td className="px-4 py-3 text-right">Ksh {Number(order.unit_price).toFixed(2)}</td>
-//                             <td className="px-4 py-3 text-right font-semibold">Ksh {Number(order.line_total).toFixed(2)}</td>
-//                           </tr>
-//                         ))}
-//                       </tbody>
-//                     </table>
-//                   </div>
-
-//                   <div className="mt-6 text-right space-y-2 text-lg">
-//                     <div>Subtotal: <strong>Ksh {cartTransaction.subtotal.toFixed(2)}</strong></div>
-//                     <div>Tax (4.78%): <strong>Ksh {cartTransaction.tax.toFixed(2)}</strong></div>
-//                     <div className="text-amber-700">Tips: <strong>Ksh 200.00</strong></div>
-//                     <div className="text-2xl font-bold text-amber-900">
-//                       Grand Total: Ksh {cartTransaction.grandTotal.toFixed(2)}
-//                     </div>
-//                   </div>
-
-//                   <button onClick={clearCart} className="mt-8 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
-//                     Clear Transaction
-//                   </button>
-//                 </div>
-//               ) : (
-//                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-gray-500">
-//                   <h3 className="text-2xl font-medium mb-4">No Transaction Loaded</h3>
-//                   <p>Click "Load Active Sessions" and select tables to begin payment.</p>
-//                 </div>
-//               )}
-//             </div>
-
-//             {/* Right Panel */}
-//             <div className="md:col-span-8 md:col-start-1 lg:col-span-3 lg:col-start-auto space-y-6">
-//               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-//                 <h3 className="font-bold text-lg mb-4">Customer Details</h3>
-//                 <input
-//                   name="name"
-//                   value={clientDetails.name}
-//                   onChange={handleClientDetails}
-//                   placeholder="Customer Name"
-//                   className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3"
-//                 />
-//                 <input
-//                   name="kra"
-//                   value={clientDetails.kra}
-//                   onChange={handleClientDetails}
-//                   placeholder="KRA Pin (Optional)"
-//                   className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-6"
-//                 />
-
-//                 <button
-//                   onClick={handlePayment}
-//                   disabled={!cartTransaction || balance > 0}
-//                   className={`w-full py-4 font-bold rounded-lg text-lg transition ${
-//                     !cartTransaction || balance > 0
-//                       ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-//                       : "bg-rose-600 text-white hover:bg-rose-700"
-//                   }`}
-//                 >
-//                   Process Payment
-//                 </button>
-
-//                 <div className="mt-8 space-y-4 text-lg">
-//                   <div className="flex justify-between">
-//                     <span>Total Due</span>
-//                     <span className="font-bold text-amber-900">
-//                       Ksh {cartTransaction?.grandTotal.toFixed(2) || "0.00"}
-//                     </span>
-//                   </div>
-//                   <div className="flex justify-between">
-//                     <span>Tendered</span>
-//                     <span className="font-bold">Ksh {cashAmount.toFixed(2) || selectedMpesaTrans ?selectedMpesaTrans.TransAmount:0}</span>
-//                   </div>
-//                   <div className="flex justify-between text-xl font-bold border-t pt-4">
-//                     <span>Balance / Change</span>
-//                     <span className={balance > 0 ? "text-red-600" : "text-green-600"}>
-//                       Ksh {balance.toFixed(2) || mpesaBalance|| mpesaBalance+balance}
-//                     </span>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-//                 <p className="font-bold mb-4">Payment Method</p>
-//                 <button
-//                   onClick={() => setCashAmountModal(true)}
-//                   className="w-full text-left px-5 py-4 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium mb-3"
-//                 >
-//                   Cash
-//                 </button>
-
-
-                
-
-//                  <button
-//                   onClick={() => setMpesaModal(true)}
-//                   className="w-full text-left px-5 py-4 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium mb-3"
-//                 >
-//                   Mpesa
-//                 </button>
-//                 {[ "Family Bank", "Manual Bank"].map(m => (
-//                   <button key={m} className="w-full text-left px-5 py-4 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium mb-2">
-//                     {m}
-//                   </button>
-//                 ))}
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Cash Amount Modal */}
-//       {cashAmountModal && (
-//         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-//           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-//             <h3 className="text-2xl font-bold mb-6">Enter Cash Amount</h3>
-//             <input
-//               type="number"
-//               value={cashAmount}
-//               onChange={e => setCashAmount(Number(e.target.value) || 0)}
-//               className="w-full px-6 py-5 text-3xl border-2 border-gray-400 rounded-xl text-center font-medium"
-//               placeholder="0.00"
-//               min="0"
-//               step="10"
-//             />
-//             <div className="grid grid-cols-2 gap-4 mt-8">
-//               <button
-//                 onClick={() => {
-//                   setCashAmountModal(false);
-//                   setCashAmount(0);
-//                 }}
-//                 className="py-3 border border-gray-400 rounded-lg font-medium"
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 onClick={() => setCashAmountModal(false)}
-//                 className="py-3 bg-amber-700 text-white rounded-lg font-medium"
-//               >
-//                 Confirm
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Active Sessions Modal */}
-//       {showSessionsModal && (
-//         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-//           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
-//             <div className="flex justify-between items-center p-6 border-b bg-gray-50">
-//               <div>
-//                 <h2 className="text-2xl font-bold">Active Dining Sessions ({activeSessions.length})</h2>
-//                 {selectedCount > 0 && (
-//                   <p className="text-sm text-amber-700 mt-1">{selectedCount} selected</p>
-//                 )}
-//               </div>
-//               <button onClick={() => setShowSessionsModal(false)} className="text-4xl text-gray-500 hover:text-gray-800">
-//                 ×
-//               </button>
-//             </div>
-
-//             <div className="overflow-y-auto flex-1 p-6">
-//               {activeSessions.length === 0 ? (
-//                 <div className="text-center py-20 text-gray-500">
-//                   <p className="text-xl">No active sessions found</p>
-//                 </div>
-//               ) : (
-//                 <div className="space-y-6">
-//                   {activeSessions.map(session => (
-//                     <div
-//                       key={session.session_id}
-//                       className={`border-2 rounded-xl overflow-hidden transition-all ${
-//                         selectedSessionsInModal.has(session.session_id)
-//                           ? "border-amber-500 shadow-lg ring-2 ring-amber-200"
-//                           : "border-gray-200"
-//                       }`}
-//                     >
-//                       <div
-//                         className="p-5 bg-gradient-to-r from-amber-50 to-amber-100 cursor-pointer flex items-center gap-4"
-//                         onClick={() => loadOrdersForSession(session.session_id)}
-//                       >
-//                         <input
-//                           type="checkbox"
-//                           checked={selectedSessionsInModal.has(session.session_id)}
-//                           onChange={() => toggleSessionSelection(session.session_id)}
-//                           onClick={e => e.stopPropagation()}
-//                           className="w-5 h-5 text-amber-600 rounded"
-//                         />
-//                         <div className="flex-1">
-//                           <div className="font-bold text-xl">
-//                             {session.table_name.trim()} #{session.table_number}
-//                           </div>
-//                           <div className="text-sm text-gray-700 mt-1">
-//                             {session.guest_count} guest{session.guest_count !== "1" ? "s" : ""} • {session.duration_formatted}
-//                           </div>
-//                         </div>
-//                         <div className="text-right">
-//                           <div className="text-2xl font-bold text-amber-900">
-//                             Ksh {Number(session.total_amount).toFixed(2)}
-//                           </div>
-//                           <span className="inline-block mt-2 px-4 py-1 text-sm bg-green-100 text-green-700 rounded-full font-medium">
-//                             Active
-//                           </span>
-//                         </div>
-//                       </div>
-
-//                       {expandedSessionId === session.session_id && (
-//                         <div className="p-6 bg-gray-50 border-t">
-//                           {ordersLoading === session.session_id ? (
-//                             <p className="text-center py-8 text-gray-600">Loading orders...</p>
-//                           ) : sessionOrdersMap[session.session_id]?.length ? (
-//                             <div className="overflow-x-auto">
-//                               <table className="w-full text-sm">
-//                                 <thead className="bg-gray-200">
-//                                   <tr>
-//                                     <th className="text-left py-3 px-4">Item</th>
-//                                     <th className="text-center py-3 px-4">Qty</th>
-//                                     <th className="text-right py-3 px-4">Price</th>
-//                                     <th className="text-right py-3 px-4">Total</th>
-//                                   </tr>
-//                                 </thead>
-//                                 <tbody>
-//                                   {sessionOrdersMap[session.session_id].map((order, i) => (
-//                                     <tr key={i} className="border-b">
-//                                       <td className="py-3 px-4">{order.item_description}</td>
-//                                       <td className="text-center py-3 px-4">{order.quantity}</td>
-//                                       <td className="text-right py-3 px-4">Ksh {Number(order.unit_price).toFixed(2)}</td>
-//                                       <td className="text-right py-3 px-4 font-medium">Ksh {Number(order.line_total).toFixed(2)}</td>
-//                                     </tr>
-//                                   ))}
-//                                 </tbody>
-//                               </table>
-//                             </div>
-//                           ) : (
-//                             <p className="text-center py-8 text-gray-600">No orders yet</p>
-//                           )}
-//                         </div>
-//                       )}
-//                     </div>
-//                   ))}
-//                 </div>
-//               )}
-//             </div>
-
-//             <div className="p-6 border-t bg-gray-50 flex justify-end gap-4">
-//               <button
-//                 onClick={() => setShowSessionsModal(false)}
-//                 className="px-8 py-3 border border-gray-400 rounded-lg font-medium"
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 onClick={handleMergeAndAddToCart}
-//                 disabled={selectedCount === 0 || ordersLoading !== null}
-//                 className={`px-8 py-3 rounded-lg font-medium ${
-//                   selectedCount > 0
-//                     ? "bg-amber-700 text-white hover:bg-amber-800"
-//                     : "bg-gray-300 text-gray-600 cursor-not-allowed"
-//                 }`}
-//               >
-//                 {selectedCount > 1 ? `Merge ${selectedCount} & Add to Cart` : "Add to Cart"} (+Tax & Tips)
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-
-
-//      {mpesaModal && (
-//   <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-//     <div className="bg-white w-full max-w-xl h-[80vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
-      
-//       {/* Header */}
-//       <div className="px-6 py-4 border-b flex justify-between items-center">
-//         <h3 className="text-lg font-bold">Mpesa Transactions</h3>
-//         <button
-//           onClick={() => setMpesaModal(false)}
-//           className="text-2xl text-gray-500 hover:text-gray-800"
-//         >
-//           &times;
-//         </button>
-//       </div>
-
-//       {/* Body */}
-//       <div className="flex-1 overflow-y-auto p-6">
-//         {mpesaTransactions.length === 0 ? (
-//           <p className="text-center text-gray-500 mt-10">
-//             No Mpesa transactions
-//           </p>
-//         ) : (
-//           <div className="space-y-3">
-//             {mpesaTransactions.map((tx) => (
-//               <div
-//                 key={tx.Auto}
-//                 className="border rounded-lg p-3 flex justify-between items-center"
-//                 onClick={()=>{setselectedMpesaTrans(tx)}}
-//               >
-//                 <div>
-//                   <p className="font-semibold">{tx.name}</p>
-//                   <p className="text-xs text-gray-500">
-//                     Ref: {tx.TransID}
-//                   </p>
-//                   <p className="text-xs text-gray-500">
-//                     {tx.TransTime}
-//                   </p>
-//                 </div>
-
-//                 <div className="font-bold text-green-700">
-//                   Ksh {Number(tx.TransAmount).toLocaleString()}
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-
-//     </div>
-//   </div>
-// )}
-
-//     </>
-//   );
-// }
-
-
-// app/payments/page.tsx
-
-
-
-
-
-
 import React, { useEffect, useState } from "react";
 import {
   GetAllActiveSessions,
@@ -644,6 +12,10 @@ import {
   CloseSession,
 } from "../hooks/access";
 import { DiningSessionDTO, OrderDTO, PosPaymentResponse } from "./types";
+import { toast } from "sonner";
+import { pdf, PDFDownloadLink } from '@react-pdf/renderer';
+import ReceiptPDF from "./restaurantReceipt";
+
 
 interface MpesaTransaction {
   Auto: string;
@@ -673,16 +45,100 @@ export default function PaymentsPage() {
 const [todel, settodel] = useState("")
   const [cashAmount, setCashAmount] = useState<number>(0);
   const [cashAmountModal, setCashAmountModal] = useState(false);
-
+const [receiptData, setReceiptData] = useState<{
+  receiptDetails: {
+    response: any;
+    itemsSent: any[];
+    totalAmount: number;
+    invoiceNo: string;
+  };
+  cartTransaction: CartTransaction;
+  clientDetails: { name: string; kra: string };
+  cashAmount: number;
+  selectedMpesaTrans: any;
+} | null>(null);
   const [clientDetails, setClientDetails] = useState({ name: "", kra: "" });
-
+const [loading, setloading] = useState(false)
   const [history, setHistory] = useState<PosPaymentResponse[]>([]);
   const [mpesaTransactions, setMpesaTransactions] = useState<MpesaTransaction[]>([]);
   const [mpesaModal, setMpesaModal] = useState(false);
   const [selectedMpesaTrans, setSelectedMpesaTrans] = useState<MpesaTransaction | null>(null);
 const [closingSessions, setClosingSessions] = useState(false);
   const [cartTransaction, setCartTransaction] = useState<CartTransaction | null>(null);
-const [selectedHistoryItem, setSelectedHistoryItem] = useState<PosPaymentResponse | null>(null);
+const [selectedHistoryItem, setSelectedHistoryItem] = useState<PosPaymentResponse & {
+  parsedItems?: any[];
+  parsedPayments?: any[];
+} | null>(null);
+useEffect(() => {
+  if (receiptData) {
+    const printReceipt = async () => {
+      try {
+        console.log("Generating receipt PDF...");
+
+        const blob = await pdf(
+          <ReceiptPDF
+            receiptDetails={receiptData.receiptDetails}
+            cartTransaction={receiptData.cartTransaction}
+            clientDetails={receiptData.clientDetails}
+            cashAmount={receiptData.cashAmount}
+            selectedMpesaTrans={receiptData.selectedMpesaTrans}
+          />
+        ).toBlob();
+
+        console.log("PDF generated, size:", blob.size);
+
+        const url = URL.createObjectURL(blob);
+
+        // Open a new tab (off-screen but with real size)
+        const printWindow = window.open(
+          url,
+          '_blank',
+          'width=800,height=600,left=-10000,top=-10000,toolbar=no,location=no,menubar=no'
+        );
+
+        if (!printWindow) {
+          toast.error("Popup blocked! Please allow popups for this site.");
+          URL.revokeObjectURL(url);
+          return;
+        }
+
+        // Wait for PDF to load, then print and close
+        printWindow.onload = () => {
+  setTimeout(() => {  // Small delay to ensure PDF is fully rendered
+    printWindow.focus();
+    printWindow.print();
+
+    // Close only after user dismisses print dialog
+    const handleAfterPrint = () => {
+      printWindow.close();
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    // Safety timeout in case afterprint doesn't fire
+    setTimeout(() => {
+      if (!printWindow.closed) printWindow.close();
+    }, 60000);
+  }, 800);
+};
+
+        // Cleanup
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          setReceiptData(null);
+        }, 8000);
+
+        toast.success("Printing receipt...");
+      } catch (error) {
+        console.error("Print failed:", error);
+        toast.error("Failed to print receipt");
+        setReceiptData(null);
+      }
+    };
+
+    printReceipt();
+  }
+}, [receiptData]);
 
 // Parse helpers inside component
 const parsedItems = selectedHistoryItem?.pitems
@@ -696,9 +152,7 @@ const parsedPayments = selectedHistoryItem?.payments
     const { name, value } = e.target;
     setClientDetails(prev => ({ ...prev, [name]: value }));
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
+const fetchData = async () => {
       try {
         const [sessionsRes, historyRes, mpesaRes] = await Promise.all([
           GetAllActiveSessions(),
@@ -713,8 +167,13 @@ const parsedPayments = selectedHistoryItem?.payments
         console.error("Error loading data:", e);
       }
     };
+  useEffect(() => {
+    
     fetchData();
   }, []);
+
+
+
 
   const loadOrdersForSession = async (sessionId: string) => {
    
@@ -809,59 +268,11 @@ const parsedPayments = selectedHistoryItem?.payments
   const totalTendered = cashAmount + (selectedMpesaTrans ? Number(selectedMpesaTrans.TransAmount) : 0);
   const balance = cartTransaction ? cartTransaction.grandTotal - totalTendered : 0;
 
-//   const handlePayment = async () => {
-//   if (!cartTransaction) return;
 
-//   try {
-//     const itemsForBackend = cartTransaction.orders.map(order => ({
-//       quantity: order.quantity.toString(),
-//       item_option: order.item_description,
-//       item_option_id: order.item_code || order.id.toString(),
-//       price: Number(order.unit_price).toFixed(2),
-//       total: Number(order.line_total),
-//     }));
-
-//     const ordersToClear = cartTransaction.orders.map(order => ({
-//       order_no: order.order_no || "",
-//       trans_type: "30",
-//       reference: order.invoice_ref || `REF_${Date.now()}`,
-//       walk_in_customer_name: "",
-//     }));
-
-//     const response = await postCashPayment({
-//       total: cartTransaction.grandTotal,
-//       items: itemsForBackend,
-//       ordersToClear,
-//       customerName: clientDetails.name || "",
-//       customerPin: clientDetails.kra || "",
-//       cashAmount: cashAmount,
-//       mpesaTransaction: selectedMpesaTrans ? {
-//         name: selectedMpesaTrans.name,
-//         TransID: selectedMpesaTrans.TransID,
-//         TransAmount: selectedMpesaTrans.TransAmount,
-//         TransTime: selectedMpesaTrans.TransTime,
-//         Auto: selectedMpesaTrans.Auto,
-//       } : null,
-//     });
-
-//     if (response?.message === "Success") {
-//       alert(`Payment successful! Invoice #${response.invNo}`);
-//       clearCart();
-// // get all session ids then close each individually passing id tp both adjust the todel state
-//       sessionsToLoad.map(())
-//       const res = await CloseSession({session_id:todel})
-//       alert(res)
-//     } else {
-//       alert(response?.message || "Payment failed");
-//     }
-//   } catch (err: any) {
-//     alert("Payment failed: " + (err.message || "Unknown error"));
-//     console.error(err);
-//   }
-// };
 
 
 const handlePayment = async () => {
+  setloading(true)
   if (!cartTransaction) return;
 
   try {
@@ -918,19 +329,37 @@ const handlePayment = async () => {
 
         const failedCloses = closeResults.filter(r => r?.error);
         if (failedCloses.length === 0) {
-          alert("All sessions closed successfully!");
+          toast.success("All sessions closed successfully!");
+        await fetchData()
+
+        // const latestTransaction = history[0];
+      setReceiptData({
+    receiptDetails: {
+      response,
+      itemsSent: itemsForBackend,
+      totalAmount: cartTransaction.grandTotal,
+      invoiceNo: response?.invNo || "N/A",
+    },
+    cartTransaction,
+    clientDetails,
+    cashAmount,
+    selectedMpesaTrans,
+  });
+ 
+        //   toast.success(latestTransaction.invNo)
         } else {
-          alert(`Payment successful, but ${failedCloses.length} session(s) failed to close.`);
+          toast.warning(`Payment successful, but ${failedCloses.length} session(s) failed to close.`);
         }
 
         // Refresh active sessions list
         const refreshed = await GetAllActiveSessions();
         if (refreshed.status === "SUCCESS") {
           setActiveSessions(refreshed.sessions || []);
+          
         }
       } catch (err) {
         console.error("Error closing sessions:", err);
-        alert("Payment successful, but failed to close sessions.");
+        toast.warning("Payment successful, but failed to close sessions.");
       }
 
       // Clear the cart
@@ -939,11 +368,143 @@ const handlePayment = async () => {
       alert(response?.message || "Payment failed");
     }
   } catch (err: any) {
-    alert("Payment failed: " + (err.message || "Network error"));
+    toast.error("Payment failed: " + (err.message || "Network error"));
     console.error(err);
+  }
+  finally{
+    setloading(false)
   }
 };
   const selectedCount = selectedSessionsInModal.size;
+
+const reprintHistoryReceipt = async () => {
+  if (!selectedHistoryItem) return;
+
+  try {
+    console.log("Reprinting history receipt...");
+
+    // Parse items and payments
+    const parsedItems = selectedHistoryItem.parsedItems ||
+      (selectedHistoryItem.pitems ? JSON.parse(selectedHistoryItem.pitems) : []);
+
+    const parsedPayments = selectedHistoryItem.parsedPayments ||
+      (selectedHistoryItem.payments ? JSON.parse(selectedHistoryItem.payments) : []);
+
+    // Map to itemsSent format
+    const itemsSent = parsedItems.map((it: any) => ({
+      item_option: it.item_option || it.item_description || "Unknown Item",
+      quantity: it.quantity?.toString() || "1",
+      price: Number(it.price || it.unit_price || 0).toFixed(2),
+      total: Number(it.total || it.line_total || 0),
+    }));
+
+    const totalAmount = Number(selectedHistoryItem.ptotal || 0);
+
+    // Find M-Pesa transaction
+    const mpesaTrans = parsedPayments.find((p: any) =>
+      p.Transtype === "MPESA" || p.Transtype === "M-PESA"
+    );
+
+    // Calculate cash amount
+    const cashPaid = mpesaTrans
+      ? totalAmount - Number(mpesaTrans.TransAmount || 0)
+      : totalAmount;
+
+    // Generate PDF blob
+    const blob = await pdf(
+      <ReceiptPDF
+        receiptDetails={{
+          response: {
+            invNo: selectedHistoryItem.invNo,
+            delNo: selectedHistoryItem.delNo || null,
+            mpesaRef: mpesaTrans?.TransID || null,
+          },
+          itemsSent,
+          totalAmount,
+          invoiceNo: selectedHistoryItem.invNo,
+        }}
+        cartTransaction={{
+          subtotal: totalAmount - totalAmount * 0.0478 - 200,
+          tax: totalAmount * 0.0478,
+          tips: 200,
+          grandTotal: totalAmount,
+          displayLabel: `Reprint - ${selectedHistoryItem.pdate}`,
+        }}
+        clientDetails={{
+          name: selectedHistoryItem.cust_name ||
+                 selectedHistoryItem.walk_in_customer_name ||
+                 "Walk-in Customer",
+          kra: selectedHistoryItem.cust_pin || "",
+        }}
+        cashAmount={cashPaid >= 0 ? cashPaid : 0}
+        selectedMpesaTrans={mpesaTrans || null}
+      />
+    ).toBlob();
+
+    const url = URL.createObjectURL(blob);
+
+    // Open a hidden popup window
+    const printWindow = window.open('', '_blank', 'width=800,height=600,left=-10000,top=-10000');
+
+    if (!printWindow) {
+      toast.error("Popup blocked! Please allow popups for reprinting.");
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // Write HTML with embedded iframe and smart printing logic
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Reprint Receipt #${selectedHistoryItem.invNo}</title>
+          <style>
+            body { margin: 0; padding: 0; overflow: hidden; }
+            iframe { width: 100vw; height: 100vh; border: none; }
+          </style>
+        </head>
+        <body>
+          <iframe src="${url}" frameborder="0"></iframe>
+          <script>
+            // Focus the window and trigger print when PDF is ready
+            window.onload = () => {
+              const iframe = document.querySelector('iframe');
+              iframe.onload = () => {
+                setTimeout(() => {
+                  window.focus();           // Bring to front
+                  window.print();           // Open print dialog
+
+                  // Listen for when user finishes printing (print or cancel)
+                  window.addEventListener('afterprint', () => {
+                    window.close();
+                  });
+
+                  // Safety fallback: close after 60 seconds if afterprint doesn't fire
+                  setTimeout(() => {
+                    if (!window.closed) window.close();
+                  }, 60000);
+                }, 600);
+              };
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    toast.success("Reprinting receipt...");
+
+    // Optional: cleanup blob URL after some time
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
+
+  } catch (error) {
+    console.error("Reprint failed:", error);
+    toast.error("Failed to reprint receipt");
+  }
+};
 
 
   return (
@@ -963,31 +524,44 @@ const handlePayment = async () => {
               <div className="space-y-3 max-h-[80vh] overflow-y-auto">
   <h3 className="font-bold text-lg sticky top-0 bg-[#F7F5EE] py-2 z-10">Payment History</h3>
   
-  {history.length === 0 ? (
-    <p className="text-center text-gray-500 text-sm py-8">No payments yet</p>
-  ) : (
-    history.map(item => (
-      <div
-        key={item.id}
-        onClick={() => setSelectedHistoryItem(item)}
-        className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-amber-400 cursor-pointer transition-all"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="font-bold text-amber-900">Invoice #{item.invNo}</div>
-            <div className="text-sm text-gray-600 mt-1">{item.pdate}</div>
-            <div className="text-xs text-gray-500 mt-1">Order #{item.order_no}</div>
+{history.length === 0 ? (
+  <p className="text-center text-gray-500 text-sm py-8">No payments yet</p>
+) : (
+  history.map(transaction => (
+    <div
+      key={transaction.id}
+      onClick={() => {
+        // Now safe to use 'item' or keep using 'transaction'
+        const freshItem = history.find(h => h.id === transaction.id);
+        if (freshItem) {
+          const parsedItems = freshItem.pitems ? JSON.parse(freshItem.pitems) : [];
+          const parsedPayments = freshItem.payments ? JSON.parse(freshItem.payments) : [];
+
+          setSelectedHistoryItem({
+            ...freshItem,
+            parsedItems,
+            parsedPayments,
+          });
+        }
+      }}
+      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-amber-400 cursor-pointer transition-all"
+    >
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="font-bold text-amber-900">Invoice #{transaction.invNo}</div>
+          <div className="text-sm text-gray-600 mt-1">{transaction.pdate}</div>
+          <div className="text-xs text-gray-500 mt-1">Order #{transaction.order_no}</div>
+        </div>
+        <div className="text-right">
+          <div className="font-bold text-xl text-amber-900">
+            Ksh {Number(transaction.ptotal).toFixed(2)}
           </div>
-          <div className="text-right">
-            <div className="font-bold text-xl text-amber-900">
-              Ksh {Number(item.ptotal).toFixed(2)}
-            </div>
-            <div className="text-sm text-gray-600">{item.ptype}</div>
-          </div>
+          <div className="text-sm text-gray-600">{transaction.ptype}</div>
         </div>
       </div>
-    ))
-  )}
+    </div>
+  ))
+)}
 </div>
 
 
@@ -1094,15 +668,12 @@ const handlePayment = async () => {
         >
           Close
         </button>
-        <button
-          onClick={() => {
-            alert("Reprint receipt feature coming soon!"); // Replace with actual print logic
-            // You can use window.print() or a proper receipt printer here
-          }}
-          className="flex-1 py-3 bg-amber-700 text-white rounded-lg font-medium hover:bg-amber-800"
-        >
-          Reprint Receipt
-        </button>
+      <button
+  onClick={reprintHistoryReceipt}
+  className="flex-1 py-3 bg-amber-700 text-white rounded-lg font-medium hover:bg-amber-800"
+>
+  Reprint Receipt
+</button>
       </div>
     </div>
   </div>
@@ -1189,15 +760,17 @@ const handlePayment = async () => {
                 />
 
                 <button
+                type="button"
+
                   onClick={handlePayment}
-                  disabled={!cartTransaction || balance > 0}
+                  disabled={!cartTransaction || balance > 0 ||loading}
                   className={`w-full py-4 font-bold rounded-lg text-lg transition ${
-                    !cartTransaction || balance > 0
+                    !cartTransaction || balance > 0 ||loading
                       ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                       : "bg-rose-600 text-white hover:bg-rose-700"
                   }`}
                 >
-                  Process Payment
+                 {loading?"Processing":" Process Payment"}
                 </button>
 
                 <div className="mt-6 space-y-4 text-lg">
@@ -1424,6 +997,80 @@ const handlePayment = async () => {
               </button>
             </div>
           </div>
+          {/* Hidden Printable Receipt - for silent thermal printing */}
+<div style={{ display: 'none' }}>
+  <div id="printable-receipt">
+    {receiptData && (
+      <div style={{
+        width: '80mm',
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        padding: '10px',
+        lineHeight: '1.4',
+      }}>
+        <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px' }}>
+          YOUR RESTAURANT
+        </div>
+        <div style={{ textAlign: 'center' }}>Nairobi, Kenya</div>
+        <div style={{ textAlign: 'center' }}>Phone: +254 700 000 000</div>
+        <div style={{ textAlign: 'center' }}>TIN: P000123456A</div>
+        <div style={{ borderBottom: '1px dashed #000', margin: '10px 0' }}></div>
+
+        <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+          OFFICIAL RECEIPT
+        </div>
+
+        <div>Invoice #: {receiptData.receiptDetails.invoiceNo}</div>
+        <div>Date: {new Date().toLocaleDateString('en-GB')}</div>
+        <div>Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+        <div>Table: {receiptData.cartTransaction.displayLabel}</div>
+
+        <div style={{ borderBottom: '1px dashed #000', margin: '10px 0' }}></div>
+
+        {receiptData.receiptDetails.itemsSent.map((item, i) => (
+          <div key={i}>
+            <div>{item.item_option}</div>
+            <div style={{ marginLeft: '20px' }}>
+              {parseFloat(item.quantity)} × KES {parseFloat(item.price).toFixed(2)} = KES {item.total.toFixed(2)}
+            </div>
+          </div>
+        ))}
+
+        <div style={{ borderBottom: '1px dashed #000', margin: '10px 0' }}></div>
+
+        <div>Subtotal: KES {receiptData.cartTransaction.subtotal.toFixed(2)}</div>
+        <div>VAT: KES {receiptData.cartTransaction.tax.toFixed(2)}</div>
+        <div>Tips: KES {receiptData.cartTransaction.tips.toFixed(2)}</div>
+        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+          GRAND TOTAL: KES {receiptData.receiptDetails.totalAmount.toFixed(2)}
+        </div>
+
+        <div style={{ borderBottom: '1px dashed #000', margin: '10px 0' }}></div>
+
+        <div>Paid by Cash: KES {receiptData.cashAmount.toFixed(2)}</div>
+        {receiptData.selectedMpesaTrans && (
+          <>
+            <div>Paid by M-Pesa: KES {parseFloat(receiptData.selectedMpesaTrans.TransAmount).toFixed(2)}</div>
+            <div>M-Pesa Ref: {receiptData.selectedMpesaTrans.TransID}</div>
+          </>
+        )}
+
+        {receiptData.clientDetails.name && (
+          <>
+            <div style={{ borderBottom: '1px dashed #000', margin: '10px 0' }}></div>
+            <div>Customer: {receiptData.clientDetails.name}</div>
+            {receiptData.clientDetails.kra && <div>KRA PIN: {receiptData.clientDetails.kra}</div>}
+          </>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <div style={{ fontWeight: 'bold' }}>*** THANK YOU! ***</div>
+          <div>Come Again Soon</div>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
         </div>
       )}
     </>

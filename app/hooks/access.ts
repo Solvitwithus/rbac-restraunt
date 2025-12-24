@@ -633,3 +633,24 @@ export async function GetProcessedTransactions(){
     
   }
   }
+
+  
+export async function GetDepartments()
+{
+   try{
+  const formData = new FormData();
+  formData.append("tp","get_departments");
+  formData.append("cp", "0_");
+
+    const response = await axios.postForm(
+      process.env.NEXT_PUBLIC_BASEURL as string,
+      formData
+    );
+
+    return response.data;
+  }
+  catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+}

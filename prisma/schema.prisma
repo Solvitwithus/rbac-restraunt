@@ -53,3 +53,25 @@ model Permission {
 }
 
 
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  orderName String @unique
+  status    String      @default("New")  // Added status field
+  items     OrderItem[] @relation("OrderToItems")
+  createdAt DateTime    @default(now())
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  order       Order    @relation("OrderToItems", fields: [orderId], references: [id])
+  orderId     Int
+  stock_id    String
+  name        String
+  description String
+  price       Float
+  units       String
+  category_id String?
+  createdAt   DateTime @default(now())
+}
+

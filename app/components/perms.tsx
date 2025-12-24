@@ -17,6 +17,7 @@ const menuItems = [
 ];
 
 import { useInternalHooks } from "../hooks/internal";
+import { toast } from "sonner";
 
 function Perms() {
     const {createRole} = useInternalHooks()
@@ -44,7 +45,8 @@ const [buttonPerm, setButtonPerm] = useState<Render>({
   payments: false,
   trackOrder:false,
   takeOrder:false,
-  viewMenu:false
+  viewMenu:false,
+  totalPlusActionButtons:false
 });
 
 const handleButtonPermChange = (key: keyof Render) => {
@@ -77,12 +79,12 @@ console.log("staff",staffResponse);
   e.preventDefault();
 
   if (!roleName.trim()) {
-    alert("Please enter a role name");
+    toast.warning("Please enter a role name");
     return;
   }
 
   if (!selectedMember) {
-    alert("Please select a staff member");
+    toast.warning("Please select a staff member");
     return;
   }
 
@@ -99,11 +101,11 @@ console.log("staff",staffResponse);
   try {
     const result = await createRole(payload);
 if ("error" in result) {
-  alert(result.error.error || result.error || "Failed to create role");
+  toast.error(result.error.error || result.error || "Failed to create role");
   console.error("Role creation failed:", result.error);
 } else {
   console.log("Role created successfully:", result);
-  alert("Role created successfully!");
+  toast.success("Role created successfully!");
   // reset form...
    setRoleName("");
     setSelectedMember("");
@@ -114,6 +116,7 @@ if ("error" in result) {
       wineDisplay:false,
       kitchenDisplay:false,
  menuList:false,
+ totalPlusActionButtons:false
     });
 }
 
@@ -123,7 +126,7 @@ if ("error" in result) {
    
   } catch (error) {
     console.error("Failed to create role:", error);
-    alert("Failed to create role. Check console for details.");
+    toast.error("Failed to create role. Check console for details.");
   }
 };
 
@@ -259,6 +262,15 @@ if ("error" in result) {
    View Menu
   </label>
 
+ <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+      checked={buttonPerm.totalPlusActionButtons}
+      onChange={() => handleButtonPermChange("totalPlusActionButtons")}
+    />
+   View Totals and Associated Action Buttons
+  </label>
 </div>
 
         </div>

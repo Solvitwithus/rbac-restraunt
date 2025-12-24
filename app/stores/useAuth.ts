@@ -126,22 +126,48 @@ export const useOrders = create<OrderState>((set) => ({
 
 interface PermissionsStore {
   permissions: Permissions;
+    hydrated: boolean;
+  setHydrated: () => void;
   setPermissions: (perms: Permissions) => void;
   clearPermissions: () => void;
 }
 
 
 
+// export const usePermissions = create<PermissionsStore>()(
+//   persist(
+//     (set) => ({
+//       permissions: defaultPermissions,
+//       setPermissions: (perms) => set({ permissions: perms }),
+//       clearPermissions: () =>
+//         set({ permissions: defaultPermissions }),
+//     }),
+//     {
+//       name: "permissions-storage", // key in localStorage
+//     }
+//   )
+// );
+
 export const usePermissions = create<PermissionsStore>()(
   persist(
     (set) => ({
       permissions: defaultPermissions,
-      setPermissions: (perms) => set({ permissions: perms }),
+      hydrated: false,
+
+      setPermissions: (perms) =>
+        set({ permissions: perms }),
+
       clearPermissions: () =>
         set({ permissions: defaultPermissions }),
+
+      setHydrated: () =>
+        set({ hydrated: true }),
     }),
     {
-      name: "permissions-storage", // key in localStorage
+      name: "permissions-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
     }
   )
 );
