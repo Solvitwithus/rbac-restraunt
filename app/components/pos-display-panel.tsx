@@ -271,6 +271,14 @@ if (!selectedTable) {
   toast.warning("Please select a table");
   return;
 }
+if(!selectedServer){
+   toast.warning("Please select a Server");
+  return;
+}
+if(!priority){
+    toast.warning("Please select a Priority");
+  return;
+}
 
 if (numGuests <= 0) {
   toast.warning("Please enter number of guests");

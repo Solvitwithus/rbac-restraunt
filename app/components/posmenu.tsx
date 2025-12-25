@@ -221,7 +221,7 @@ const displayPanel = allDisplayPanel.filter(
               onClick={logout}
               className="px-4 py-4 text-right text-red-600 text-sm hover:bg-[#efe6db]"
             >
-              Log Out
+              End Shift
             </button>
 
             <Link

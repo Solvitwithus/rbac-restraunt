@@ -190,7 +190,7 @@ export default function MonitorOrders() {
         <div className="flex justify-between items-center">
           <h2 className="hidden lg:block text-2xl font-bold text-gray-800">Active Sessions</h2>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 mb-1">
             <button
               onClick={() => setOnlyMyOrders(!onlyMyOrders)}
               className={`px-4 py-2 rounded-lg font-medium transition ${
@@ -285,8 +285,10 @@ export default function MonitorOrders() {
         )}
 
         {/* Date & Sort Filters */}
-        <div className="flex flex-wrap gap-3 mb-4 p-2 bg-white rounded-xl shadow">
+        <div className="flex flex-wrap items-center gap-3 mb-4 p-2 bg-white rounded-xl shadow">
+          <label className="hidden lg:block text-black/50">Start Date</label>
           <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="sm:px-1 lg:px-4 py-2 border rounded-lg" />
+          <label className="hidden lg:block text-black/50">End Date</label>
           <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="sm:px-1 lg:px-4 py-2 border rounded-lg" />
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "asc" | "desc")} className="hidden lg:block px-4 py-2 border rounded-lg">
             <option value="desc">Newest First</option>
@@ -302,12 +304,12 @@ export default function MonitorOrders() {
               : "No active sessions"}
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3  gap-2 max-h-[85%] min-h-[85%] overflow-y-auto py-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3  gap-2 max-h-[85%] overflow-y-auto py-3">
             {filteredSessions.map((s) => (
               <div
                 key={s.session_id}
                 onClick={() => handleSessionClick(s.session_id)}
-                className={`relative p-2 rounded-xl border-2 w-[94%] cursor-pointer transition-all hover:scale-105 shadow-md ${
+                className={`relative p-2 rounded-xl border-2 w-[94%] mb-3 cursor-pointer transition-all hover:scale-105 shadow-md ${
                   selectedSessionId === s.session_id
                     ? "border-blue-500 bg-blue-50 shadow-xl"
                     : "border-gray-300 bg-white"
@@ -360,7 +362,7 @@ export default function MonitorOrders() {
             </p>
           </div>
         ) : (
-          <div className="space-y-5 max-h-[70%] overflow-y-auto pr-2">
+          <div className="space-y-5 max-h-[63%] overflow-y-auto pr-2">
             {orders.map((order) => (
               <div
                 key={order.id}
@@ -405,9 +407,9 @@ export default function MonitorOrders() {
                   <p className="mt-4 text-sm italic text-gray-600">Note: {order.notes}</p>
                 )}
 
-                {editingOrderId === order.id && (
+                { editingOrderId === order.id && (
                   <div className="mt-6 pt-6 border-t flex flex-col sm:flex-row gap-4" onClick={(e) => e.stopPropagation()}>
-                    {["served", "cancelled"].includes(order.status) ? (
+                    {["served", "cancelled","ordered","preparing"].includes(order.status) ? (
                       <p className="text-red-600 font-semibold text-sm">
                         This order is <strong>{order.status}</strong> — no further updates allowed.
                       </p>
@@ -423,7 +425,7 @@ export default function MonitorOrders() {
                         </select>
                         <button
                           onClick={() => handleStatusChange(order.id)}
-                          disabled={updating}
+                          disabled={updating }
                           className="px-8 py-3 bg-[#D4A373] text-black/80 font-semibold rounded-lg hover:bg-[#c4955f] disabled:opacity-60"
                         >
                           {updating ? "Updating..." : "Update Status"}

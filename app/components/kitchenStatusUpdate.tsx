@@ -47,9 +47,13 @@ useEffect(() => {
   let filtered = [...sessions];
 
   // 🔴 EXCLUDE BAR SESSIONS
-  filtered = filtered.filter(
-    (s) => s.notes?.toLowerCase() !== "bar"
-  );
+const excludedDepartments = ["bar", "winelounge"];
+
+filtered = filtered.filter((s) => {
+  if (!s.notes) return true; // Keep if no department
+  const notes = s.notes.trim().toLowerCase();
+  return !excludedDepartments.includes(notes);
+});
 
   if (searchTerm) {
     const term = searchTerm.toLowerCase();
@@ -96,10 +100,11 @@ useEffect(() => {
           setOrders(allOrders);
 
           // Filter out orders with notes === "Bar"
-          const nonBarOrders = allOrders.filter(order => 
-            order.notes?.toLowerCase() !== "bar" || "Bar"
-          );
-          setFilteredOrders(nonBarOrders);
+         const nonBarOrders = allOrders.filter((order) => {
+  const notes = order.notes?.toLowerCase();
+  return notes !== "bar" && notes !== "winelounge";
+});
+setFilteredOrders(nonBarOrders);
         } else {
           toast.info("No orders yet");
         }
@@ -122,8 +127,16 @@ useEffect(() => {
         if (res?.status === "SUCCESS") {
           const allOrders = res.orders || [];
           setOrders(allOrders);
-          setFilteredOrders(allOrders.filter(o => o.notes?.toLowerCase() !== "bar"));
+         
+          setFilteredOrders(
+  allOrders.filter((o) => {
+    const notes = o.notes?.toLowerCase();
+    return notes !== "bar" && notes !== "winelounge";
+  })
+);
         }
+
+        
       } catch {}
     };
 

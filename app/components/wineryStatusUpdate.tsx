@@ -47,9 +47,13 @@ useEffect(() => {
   let filtered = [...sessions];
 
   // 🔴 EXCLUDE BAR SESSIONS
-  filtered = filtered.filter(
-    (s) => s.notes?.toLowerCase() === "bar"
-  );
+const includedDepartments = ["bar", "winelounge"];
+
+filtered = filtered.filter((s) => {
+  if (!s.notes) return false;
+  const notes = s.notes.trim().toLowerCase();
+  return includedDepartments.includes(notes);
+});
 
   if (searchTerm) {
     const term = searchTerm.toLowerCase();

@@ -81,13 +81,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   infoColumn: {
-    flex: 1,
+    flexDirection: "column",
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 3,
   },
+    infoRowi: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    
+  },
+
   infoLabel: {
     fontSize: CONFIG.fonts.small,
     fontWeight: "bold",
@@ -154,7 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   grandTotalLabel: {
-    fontSize: 16,
+    fontSize: 10,
     fontWeight: "bold",
   },
   grandTotalValue: {
@@ -237,14 +243,17 @@ const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
   });
 
   const customerName = clientDetails.name || "Walk-in Customer";
-
+const balance =
+  cartTransaction.grandTotal -
+  Number(cashAmount || 0) -
+  Number(selectedMpesaTrans?.TransAmount || 0);
   return (
     <Document>
       <Page size={[CONFIG.width, 1400]} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.companyName}>YOUR RESTAURANT</Text>
-          <Text style={styles.receiptType}>CASH RECEIPT</Text>
+          <Text style={styles.companyName}>MY RESTAURANT</Text>
+          <Text style={styles.receiptType}>CASH SALE RECEIPT</Text>
           <View style={styles.contactInfo}>
             <Text style={styles.contactText}>Nairobi, Kenya</Text>
             <Text style={styles.contactText}>Phone: +254 700 000 000</Text>
@@ -255,16 +264,18 @@ const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         <View style={styles.divider} />
 
         {/* Transaction Info */}
-        <View style={styles.infoGrid}>
+        
           <View style={styles.infoColumn}>
             <View style={styles.infoRow}>
+              <View style={styles.infoRowi}>
               <Text style={styles.infoLabel}>Invoice #:</Text>
-              <Text style={styles.infoValue}>{invoiceNo}</Text>
+              <Text style={styles.infoValue}>{receiptDetails.invoiceNo}</Text>
             </View>
-            <View style={styles.infoRow}>
+            <View style={styles.infoRowi}>
               <Text style={styles.infoLabel}>Date:</Text>
               <Text style={styles.infoValue}>{date}</Text>
             </View>
+          </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Time:</Text>
               <Text style={styles.infoValue}>{time}</Text>
@@ -289,7 +300,7 @@ const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
               </View>
             )}
           </View>
-        </View>
+       
 
         <View style={styles.divider} />
 
@@ -342,6 +353,13 @@ const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             </Text>
           </View>
 
+           <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Balance</Text>
+          <Text style={styles.totalValue}>
+  {formatCurrency(balance)}
+</Text>
+          </View>
+
           <View style={styles.grandTotalRow}>
             <Text style={styles.grandTotalLabel}>GRAND TOTAL</Text>
             <Text style={styles.grandTotalValue}>
@@ -353,31 +371,42 @@ const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         <View style={styles.divider} />
 
         {/* Payments */}
-        <View style={styles.paymentSection}>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Paid by Cash</Text>
-            <Text style={styles.paymentValue}>
-              {formatCurrency(cashAmount)}
-            </Text>
-          </View>
+    {Number(cashAmount) > 0 && (
+  <View style={styles.paymentSection}>
+    <View style={styles.paymentRow}>
+      <Text style={styles.paymentLabel}>Paid by Cash</Text>
+      <Text style={styles.paymentValue}>
+        {formatCurrency(cashAmount)}
+      </Text>
+    </View>
+  </View>
+)}
 
-          {selectedMpesaTrans && (
-            <>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>Paid by M-Pesa</Text>
-                <Text style={styles.paymentValue}>
-                  {formatCurrency(parseFloat(selectedMpesaTrans.TransAmount))}
-                </Text>
-              </View>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>M-Pesa Ref</Text>
-                <Text style={styles.paymentValue}>
-                  {selectedMpesaTrans.TransID}
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
+     
+{Number(selectedMpesaTrans?.TransAmount) > 0 && (
+  <View style={styles.paymentSection}>
+    <View style={styles.paymentRow}>
+      <Text style={styles.paymentLabel}>Paid by M-Pesa</Text>
+      <Text style={styles.paymentValue}>
+        {formatCurrency(Number(selectedMpesaTrans.TransAmount))}
+      </Text>
+    </View>
+
+    <View style={styles.paymentRow}>
+      <Text style={styles.paymentLabel}>M-Pesa Ref</Text>
+      <Text style={styles.paymentValue}>
+        {selectedMpesaTrans.TransID}
+      </Text>
+    </View>
+  </View>
+)}
+
+
+{Number(cashAmount) === 0 && !selectedMpesaTrans && (
+  <Text style={styles.paymentLabel}>No payments recorded</Text>
+)}
+
+        
 
         <View style={styles.divider} />
 
@@ -385,7 +414,7 @@ const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         <View style={styles.footer}>
           <Text style={styles.thankYou}>*** THANK YOU! ***</Text>
           <Text style={styles.footerText}>Come Again Soon</Text>
-          <Text style={styles.footerText}>Powered by Your POS System</Text>
+          <Text style={styles.footerText}>Powered by Digisoft</Text>
         </View>
       </Page>
     </Document>

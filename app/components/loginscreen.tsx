@@ -261,7 +261,7 @@ setSession(res)
           disabled={loading}
           className="bg-[#c9184a] mt-5 cursor-pointer font-bold text-white py-2 rounded-md hover:bg-[#b88658] transition"
         >
-          {loading ? "Logging In" : "Log In"}
+          {loading ? "Shift Starting" : "Start Shift"}
         </button>
       </form>
       {/* 👆 FORM END */}

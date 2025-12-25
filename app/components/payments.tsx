@@ -308,7 +308,7 @@ const handlePayment = async () => {
     });
 
     if (response?.message === "Success") {
-      alert(`Payment successful! Invoice #${response.invNo || "N/A"}`);
+      toast.success(`Payment successful! Invoice #${response.invNo || "N/A"}`);
 
       // Close ALL sessions that were part of this transaction
       const sessionIds = cartTransaction.sessions.map(session => session.session_id);
@@ -376,6 +376,7 @@ const handlePayment = async () => {
   }
 };
   const selectedCount = selectedSessionsInModal.size;
+console.log("receipt Data",receiptData);
 
 const reprintHistoryReceipt = async () => {
   if (!selectedHistoryItem) return;
@@ -511,12 +512,12 @@ const reprintHistoryReceipt = async () => {
     <>
       <div className=" bg-[#F7F5EE]">
         <div className="p-4 md:p-6 lg:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-4">
             {/* Left: History */}
             <div className="md:col-span-2 space-y-6 border-r border-black/20 pr-4">
               <button
                 onClick={() => setShowSessionsModal(true)}
-                className="w-full py-4 bg-amber-700 text-white font-bold rounded-lg hover:bg-amber-800"
+                className="w-full py-3 bg-[#c9184a] text-white font-bold rounded-lg hover:bg-amber-800"
               >
                 Load Active Sessions
               </button>
@@ -544,7 +545,7 @@ const reprintHistoryReceipt = async () => {
           });
         }
       }}
-      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-amber-400 cursor-pointer transition-all"
+      className="bg-white rounded-lg border border-gray-200 p-2 shadow-sm hover:shadow-md hover:border-amber-400 cursor-pointer transition-all"
     >
       <div className="flex justify-between items-start">
         <div>
@@ -553,10 +554,10 @@ const reprintHistoryReceipt = async () => {
           <div className="text-xs text-gray-500 mt-1">Order #{transaction.order_no}</div>
         </div>
         <div className="text-right">
-          <div className="font-bold text-xl text-amber-900">
+          <div className="font-bold text-sm text-black">
             Ksh {Number(transaction.ptotal).toFixed(2)}
           </div>
-          <div className="text-sm text-gray-600">{transaction.ptype}</div>
+      
         </div>
       </div>
     </div>
@@ -790,9 +791,10 @@ const reprintHistoryReceipt = async () => {
 
                   {cashAmount > 0 && (
                     <div className="flex justify-between text-blue-700">
-                      <span>Cash Tendered</span>
+                      <span>Tendered</span>
                       <span className="font-bold">Ksh {cashAmount.toFixed(2)}</span>
                     </div>
+                    
                   )}
 
                   <div className="flex justify-between text-xl font-bold border-t pt-4">
@@ -940,15 +942,61 @@ const reprintHistoryReceipt = async () => {
                         onClick={e => e.stopPropagation()}
                         className="w-5 h-5"
                       />
-                      <div className="flex-1">
-                        <div className="font-bold text-xl">{session.table_name.trim()} #{session.table_number}</div>
-                        <div className="text-sm text-gray-700">{session.guest_count} guests • {session.duration_formatted}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-amber-900">
-                          Ksh {Number(session.total_amount).toFixed(2)}
-                        </div>
-                      </div>
+                   <div className="flex flex-1 items-start justify-between gap-6">
+  {/* Left: Table Info */}
+  <div className="flex-1">
+    <h3 className="font-bold text-2xl text-gray-900">
+      {session.table_name.trim()} 
+      <span className="text-lg text-gray-600 ml-2">#{session.table_number}</span>
+    </h3>
+
+    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-700">
+      <span className="flex items-center gap-1">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        {session.guest_count} guests
+      </span>
+
+      <span className="flex items-center gap-1">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {session.duration_formatted}
+      </span>
+
+      <span className="flex items-center gap-1">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </span>
+    </div>
+
+    {/* Department Badge */}
+    {session.notes && (
+      <div className="mt-3">
+        <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+          session.notes.toLowerCase().includes('wine') 
+            ? "bg-purple-100 text-purple-800" 
+            : session.notes.toLowerCase() === 'bar'
+            ? "bg-red-100 text-red-800"
+            : "bg-blue-100 text-blue-800"
+        }`}>
+          {session.notes}
+        </span>
+      </div>
+    )}
+  </div>
+
+  {/* Right: Total Amount */}
+  <div className="text-right">
+    <p className="text-3xl font-extrabold text-amber-900">
+      {Number(session.session_id)}
+    </p>
+    <p className="text-sm text-gray-500 mt-1">Session</p>
+  </div>
+</div>
                     </div>
 
                     {expandedSessionId === session.session_id && (
