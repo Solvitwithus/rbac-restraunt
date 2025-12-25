@@ -35,8 +35,23 @@ async function fetchRoles(id?: string) {
     }
   }
 
+
+async function fetchAllRoles() {
+  try {
+    const url = "/api/roles";
+    const response = await axios.get(url, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data; // { roles: [...] }
+  } catch (error: any) {
+    console.error("Error fetching roles:", error);
+    // Throw so the component's catch/finally runs
+    throw new Error(error.response?.data?.message || error.message || "Failed to fetch roles");
+  }
+}
+
   return {
-    createRole,fetchRoles
+    createRole,fetchRoles,fetchAllRoles
   };
 
 };

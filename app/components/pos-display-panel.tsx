@@ -66,7 +66,7 @@
  * =============================================================================
  */
 import React, { useEffect, useState, useMemo } from 'react';
-import { Pause, PlayIcon, Search, SidebarCloseIcon, X,LockIcon ,Trash2} from 'lucide-react';
+import { Pause, PlayIcon, Search, SidebarCloseIcon, X,LockIcon ,Trash2, Loader2} from 'lucide-react';
 import { CreateOrderItem, SessionCreation, RestrauntTables, StaffMembers,GetDepartments } from '@/app/hooks/access';
 import { useSelectedData } from '../stores/useAuth';
 import { getMenu } from '@/app/hooks/access';
@@ -456,6 +456,7 @@ const handleHold = async () => {
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
             <input
               type="text"
+              autoFocus
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -816,44 +817,67 @@ const handleHold = async () => {
 
 
 {holdOrderSnip && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-    <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative animate-in fade-in zoom-in duration-200">
+  <div
+    onClick={() => setholdOrderSnip(false)}
+    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 backdrop-blur-sm"
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300"
+    >
+      {/* Header */}
+      <div className="bg-[#1E3932] px-6 py-4 flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Hold Order</h2>
+        <button
+          onClick={() => setholdOrderSnip(false)}
+          className="text-white/80 hover:text-white hover:bg-white/10 rounded-full p-2 transition"
+        >
+          <X size={24} />
+        </button>
+      </div>
 
-      {/* Close Button */}
-      <button
-        onClick={() => setholdOrderSnip(false)}
-        className="absolute right-4 top-4 text-gray-600 hover:text-black transition"
-      >
-        <X size={20} />
-      </button>
+      {/* Body */}
+      <div className="p-8">
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Order Name
+          </label>
+          <input
+            type="text"
+            autoFocus
+            placeholder="e.g., Table 5 - VIP Group, John Doe"
+            value={orderName}
+            onChange={(e) => setorderName(e.target.value)}
+            className="w-full px-4 py-3 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] transition"
+          />
+          <p className="text-sm text-gray-500 mt-2">
+            Give this order a memorable name for easy retrieval later.
+          </p>
+        </div>
 
-      <h2 className="text-xl font-semibold text-[#1E3932] mb-4">Hold Order</h2>
-
-      {/* Input */}
-      <input
-        type="text"
-        placeholder="Order name"
-        value={orderName}
-        onChange={(e) => setorderName(e.target.value)}
-        className="border w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#099c7f] mb-4"
-      />
-
-      {/* Button */}
-      <button
-        type="button"
-        disabled={loading}
-        onClick={handleHold}
-        className={`w-full flex items-center justify-center gap-2 py-2 font-semibold rounded-md shadow-md active:scale-95 transition-all
-          ${
-            loading
-              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-              : "bg-[#D4AF37] text-[#1E3932] hover:bg-[#c9a034]"
-          }
-        `}
-      >
-        {loading ? "Please wait..." : "Hold order"}
-      </button>
-
+        {/* Submit Button */}
+        <button
+          type="button"
+          disabled={loading || !orderName.trim()}
+          onClick={handleHold}
+          className={`w-full py-4 px-6 rounded-xl font-semibold text-lg shadow-lg transition-all flex items-center justify-center gap-3
+            ${
+              loading || !orderName.trim()
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#D4AF37] text-[#1E3932] hover:bg-[#c9a034] hover:shadow-xl active:scale-[0.98] transform"
+            }
+          `}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={20} />
+              Saving Order...
+            </>
+          ) : (
+            "Hold Order"
+          )}
+        </button>
+      </div>
     </div>
   </div>
 )}

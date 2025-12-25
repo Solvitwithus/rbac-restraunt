@@ -89,7 +89,7 @@ interface LandingPage {
 
 function Menu() {
   const {  clearSession } = useLoginSession();
-  const { permissions } = usePermissions(); // Get permissions from store
+  const { permissions,clearPermissions } = usePermissions(); // Get permissions from store
   const currentPath = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -100,9 +100,9 @@ const allDisplayPanel: LandingPage[] = [
   { name: "Menu List", path: "/stock-list", icon: OurMenu, key: "menuList" },
  
   { name: "Reports", path: "/reports", icon: Report, key: "reports" },
-   { name: "Kitchen Display", path: "/kitchen-display", icon: KitchenTrack, key: "orderDisplay" },
+   { name: "Kitchen Display", path: "/kitchen-display", icon: KitchenTrack, key: "kitchenDisplay" },
   { name: "Wine wall", path: "/winery-display", icon: Wine, key: "wineDisplay" },
-  { name: "Chef Panel", path: "/order-display", icon: Kitchen, key: "kitchenDisplay" },
+  { name: "Chef Panel", path: "/order-display", icon: Kitchen, key: "orderDisplay" },
   
 ];
 
@@ -111,7 +111,10 @@ const displayPanel = allDisplayPanel.filter(
 );
   const logout = () => {
     clearSession()
-    localStorage.removeItem("login-session");
+    localStorage.removeItem("permissions-storage")
+    localStorage.removeItem("login-session")
+    clearPermissions()
+   
     router.push("/");
   };
 
@@ -146,7 +149,7 @@ const displayPanel = allDisplayPanel.filter(
                   ? "text-[#099c7f] font-semibold"
                   : "text-[#4B2E26] hover:text-[#c9184a]"}`}
             >
-              <Image src={val.icon} width={24} height={24} alt={val.name} />
+              <Image src={val.icon} width={24} height={24} alt={val.name} className="hidden lg:block"/>
               <span className="text-sm">{val.name}</span>
             </Link>
           ))}
@@ -159,14 +162,15 @@ const displayPanel = allDisplayPanel.filter(
         <div className="hidden md:flex items-center gap-6">
           <button
             onClick={logout}
-            className="text-red-600 hover:underline text-sm font-medium"
+            className="text-red-600 cursor-pointer hover:underline text-sm font-medium"
           >
-            Log Out
+            End Shift
           </button>
 
           <Link
             href={process.env.NEXT_PUBLIC_EXIT_URL as string}
             className="text-gray-600 hover:underline text-sm font-medium"
+             onClick={logout}
           >
             Exit
           </Link>
@@ -186,7 +190,7 @@ const displayPanel = allDisplayPanel.filter(
           className="
             md:hidden
             fixed
-            top-[64px]
+            top-16
             left-0
             w-full
             bg-[#F6EFE7]
@@ -219,6 +223,7 @@ const displayPanel = allDisplayPanel.filter(
 
             <button
               onClick={logout}
+              
               className="px-4 py-4 text-right text-red-600 text-sm hover:bg-[#efe6db]"
             >
               End Shift
@@ -227,6 +232,7 @@ const displayPanel = allDisplayPanel.filter(
             <Link
               href={process.env.NEXT_PUBLIC_EXIT_URL as string}
               className="px-4 py-4 text-right text-gray-600 text-sm hover:bg-[#efe6db]"
+               onClick={logout}
             >
               Exit
             </Link>

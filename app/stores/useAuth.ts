@@ -147,24 +147,31 @@ interface PermissionsStore {
 //     }
 //   )
 // );
-
 export const usePermissions = create<PermissionsStore>()(
   persist(
     (set) => ({
       permissions: defaultPermissions,
       hydrated: false,
 
-      setPermissions: (perms) =>
+      setPermissions: (perms: Permissions) =>
         set({ permissions: perms }),
 
+      // Fixed: clearPermissions now properly resets state AND removes from storage
       clearPermissions: () =>
-        set({ permissions: defaultPermissions }),
+        set(() => {
+          // Remove from persist storage
+          localStorage.removeItem("permissions-storage");
+          return { permissions: defaultPermissions, hydrated: true };
+        }),
 
-      setHydrated: () =>
-        set({ hydrated: true }),
+      setHydrated: () => set({ hydrated: true }),
     }),
     {
-      name: "permissions-storage",
+      name: "permissions-storage", // key in localStorage
+      // Optional: only persist permissions, not hydrated flag
+      partialize: (state) => ({ permissions: state.permissions }),
+
+      // Called after rehydration from storage
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();
       },

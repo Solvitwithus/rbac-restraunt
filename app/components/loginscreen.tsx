@@ -57,7 +57,7 @@ import { Role } from "./types";
 
 export default function LoginCard() {
   const router = useRouter();
-  const {setPermissions} = usePermissions()
+  const {setPermissions,clearPermissions} = usePermissions()
 const {token,clearSession,setSession,} = useLoginSession()
 
 const {fetchRoles} = useInternalHooks()
@@ -70,9 +70,11 @@ const {fetchRoles} = useInternalHooks()
   // useEffect(() => {
   //   if (token) router.push("/sales-register");
   // }, [token, router]);
+
+  // remove this in production
     useEffect(() => {
     if (localStorage.getItem("login-session")) {
-      toast.info("Auto login")
+      toast.info("Auto login will be removed in production")
       router.push("/sales-register");
     }
     
@@ -84,69 +86,13 @@ const {fetchRoles} = useInternalHooks()
     if (name === "password") setPassword(value);
   };
 
-// const handleLogin = async (e?: React.FormEvent) => {
-//   e?.preventDefault();
-//   try {
-//     setLoading(true);
 
-//     if (!userName || !password) {
-//       toast.error("Please enter all credentials");
-//       return;
-//     }
-
-
-//     const res = await Login(userName, password) as LoginResponse;;
-// console.log("res",res);
-
-//     if (res) {
-
-//       // Fetch the user's role + permissions
-//       const rolesResponse = await fetchRoles(res.id); 
-
-      
-
-//       let rolesArray: Role[];
-//  setSession(res)
-//       if (rolesResponse.role) {
-//         // single role response: { role: { ... } }
-//         rolesArray = [rolesResponse.role];
-//       } else if (rolesResponse.roles) {
-//         // multiple roles: { roles: [...] }
-//         rolesArray = rolesResponse.roles;
-//       }
-      
-     
-//       else {
-//         console.warn("Unexpected roles response format", rolesResponse);
-//         rolesArray = [];
-//       }
-// toast.error("failed")
-//       console.log("Fetched roles:", rolesArray);
-
-//       // Convert to the shape your app uses
-//       const uiPermissions = apiPermissionsToObject(rolesArray);
-// console.log("ui",uiPermissions);
-
-//       // Save to Zustand store
-//      setPermissions(uiPermissions);
-
-//       toast.success("Login successful!");
-//       // redirect or whatever you do next
-
-      
-//       router.push("/sales-register")
-//     }
-//   } catch (error) {
-//     console.error("Login error:", error);
-//     toast.error("Unexpected error occurred! Please try again later.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
 
 
 const handleLogin = async (e?: React.FormEvent) => {
   e?.preventDefault();
+
+
   try {
     setLoading(true);
 
@@ -158,7 +104,7 @@ const handleLogin = async (e?: React.FormEvent) => {
     // 1️⃣ Login
     const res = (await Login(userName, password)) as LoginResponse;
     if (!res) return;
-
+clearPermissions()
     // 2️⃣ Fetch roles
     const rolesResponse = await fetchRoles(res.id);
     let rolesArray: Role[] = [];
@@ -171,6 +117,7 @@ setSession(res)
 
     // 3️⃣ Convert to UI permissions
     const uiPermissions = apiPermissionsToObject(rolesArray);
+  
     setPermissions(uiPermissions);
 
     // 4️⃣ Map permissions to pages
@@ -187,21 +134,25 @@ setSession(res)
     const firstPage = Object.keys(pageMap).find(
       (perm) => uiPermissions[perm]
     );
+   
 
     // 6️⃣ Redirect
     if (firstPage) {
       router.push(pageMap[firstPage]);
+      toast.success("Login successful!");
     } else {
       router.push("/"); // fallback page
+         toast.warning("You do not have access permissions. Please contact your supervisor!");
     }
 
-    toast.success("Login successful!");
+    
   } catch (error) {
     console.error("Login error:", error);
     toast.error("Unexpected error occurred! Please try again later.");
   } finally {
     setLoading(false);
   }
+  
 };
 
   return (
