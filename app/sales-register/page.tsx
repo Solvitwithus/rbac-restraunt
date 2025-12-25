@@ -62,7 +62,7 @@ function Page() {
     <div className="min-h-screen h-fit sm:h-auto overflow-y-auto min-w-min bg-[#F7F5EE]">
       <Menu />
 
-      <div className="flex my-4 gap-1 mx-2">
+      <div className="flex my-4 gap-2 mx-2 justify-center">
         <AutoLogout />
         <Posdisplaypanem />
         <Posregisteritemsection />

@@ -436,7 +436,7 @@ const handleHold = async () => {
           <div className="flex justify-between items-center mb-4">
             <button
               onClick={clearSelectedItems}
-              className="text-sm cursor-pointer font-bold text-green-600 hover:underline"
+              className="text-sm cursor-pointer font-bold text-green-800 hover:underline"
             >
               Take New Order
             </button>
@@ -464,7 +464,7 @@ const handleHold = async () => {
               }}
               onFocus={() => setShowResults(true)}
               placeholder="Search by name or code..."
-              className="w-full pl-10 pr-10 py-2.5 bg-gray-100 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full pl-10 pr-10 py-2.5 bg-gray-100 rounded-lg border-width-[0.3px] border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-900/80"
             />
             {searchQuery && (
               <X
