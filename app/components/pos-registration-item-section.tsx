@@ -81,7 +81,7 @@ const Posregisteritemsection = () => {
   const [menuItems, setMenuItems] = useState<MenuItemsTypes[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-const [query, setQuery] = useState<string>("VinoVeritas")
+const [query, setQuery] = useState<string>("Signature Dish")
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
