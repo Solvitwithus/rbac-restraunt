@@ -136,8 +136,8 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-[#F7F5EE] flex flex-col">
       <Menu />
 
-      <div className="flex-1 overflow-y-auto pb-10">
-        <div className="pt-20 px-4 max-w-7xl mx-auto">
+      <div className="flex-1 overflow-y-auto pb-2">
+        <div className="pt-2 px-4 max-w-full mx-auto">
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold text-[#c9184a] mb-2">Sales Reports</h1>
