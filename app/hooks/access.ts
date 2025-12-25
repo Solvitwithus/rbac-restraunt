@@ -590,29 +590,34 @@ export async function postCashPayment({
 }
 
 
-export async function GetProcessedTransactions(){
-  try{
+export async function GetProcessedTransactions({
+  startDate,
+  endDate,
+}: {
+  startDate?: string;  // YYYY-MM-DD
+  endDate?: string;    // YYYY-MM-DD
+} = {}) {
+  try {
     const today = new Date().toISOString().split("T")[0];
- const formData = new FormData();
 
-    // Required fixed fields
+    const formData = new FormData();
+
     formData.append("tp", "loadPOSTransaction");
     formData.append("cp", "0_");
     formData.append("id", "104");
-    formData.append("postrans_date", today);
-    formData.append("end_date", today);
+    formData.append("postrans_date", startDate || today);
+    formData.append("end_date", endDate || today);
 
-    const response = await axios.postForm("https://marvel.digerp.com/test/process.php", formData);
+    const response = await axios.postForm(
+      "https://marvel.digerp.com/test/process.php",
+      formData
+    );
 
     return response.data;
+  } catch (e: unknown) {
+    console.error("Failed to fetch transactions:", e);
+    return []; // Return empty array on error
   }
-  catch(e:unknown){
-    console.log(e);
-    
-  }
-
-
- 
 }
 
  export async function LoadMpesaTransactions(){
