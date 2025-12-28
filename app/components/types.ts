@@ -221,6 +221,7 @@ export const defaultPermissions: Permissions = {
    trackOrder:false,
    takeOrder:false,
   viewMenu:false,
+  ViewTables:false,
   kitchenDisplay:false,
   menuList:false,
   totalPlusActionButtons:false
@@ -234,5 +235,6 @@ export interface Render{
   trackOrder:boolean;
   takeOrder:boolean;
    viewMenu:boolean;
+   ViewTables:boolean;
    totalPlusActionButtons:boolean;
 }

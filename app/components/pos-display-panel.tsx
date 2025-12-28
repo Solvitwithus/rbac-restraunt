@@ -441,7 +441,11 @@ const handleHold = async () => {
               Take New Order
             </button>
 <div className='flex gap-2 items-center'>
-            <span className="text-sm font-bold text-red-600/80">Input code</span>
+
+  {permissions.ViewTables && (
+ <Link href={"/table-listing"} className="text-sm font-bold text-red-600/80">Floor Plan</Link>
+  )}
+           
             {permissions.trackOrder && (
  <Link href="/track-orders" className="text-[#c9184a] font-medium">
           Track Orders

@@ -33,6 +33,7 @@ const buttonPermissions = [
   { key: "takeOrder", label: "Take Orders", desc: "Add items to cart via search" },
   { key: "viewMenu", label: "View Menu", desc: "Browse and add menu items to cart" },
   { key: "totalPlusActionButtons", label: "View Totals & Actions", desc: "Show cart total and action buttons panel" },
+  { key: "ViewTables", label: "View Tables", desc: "Show tables availability in real Time" },
 ];
 
 function Perms() {
@@ -63,6 +64,7 @@ function Perms() {
     trackOrder: false,
     takeOrder: false,
     viewMenu: false,
+    ViewTables:false,
     totalPlusActionButtons: false,
   });
 
@@ -132,6 +134,7 @@ function Perms() {
           trackOrder: false,
           takeOrder: false,
           viewMenu: false,
+          ViewTables:false,
           totalPlusActionButtons: false,
         });
       }

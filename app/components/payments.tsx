@@ -59,6 +59,7 @@ const [receiptData, setReceiptData] = useState<{
 } | null>(null);
   const [clientDetails, setClientDetails] = useState({ name: "", kra: "" });
 const [loading, setloading] = useState(false)
+const [loadingprepay, setloadingprepay] = useState(false)
   const [history, setHistory] = useState<PosPaymentResponse[]>([]);
   const [mpesaTransactions, setMpesaTransactions] = useState<MpesaTransaction[]>([]);
   const [mpesaModal, setMpesaModal] = useState(false);
@@ -267,6 +268,190 @@ const fetchData = async () => {
 
   const totalTendered = cashAmount + (selectedMpesaTrans ? Number(selectedMpesaTrans.TransAmount) : 0);
   const balance = cartTransaction ? cartTransaction.grandTotal - totalTendered : 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const handlePrePayment = async () => {
+ 
+  setloadingprepay(true)
+  if (!cartTransaction) return;
+
+  try {
+    const itemsForBackend = cartTransaction.orders.map(order => ({
+      quantity: order.quantity.toString(),
+      item_option: order.item_description,
+      item_option_id: order.item_code || order.id.toString(),
+      price: Number(order.unit_price).toFixed(2),
+      total: Number(order.line_total),
+    }));
+
+    const ordersToClear = cartTransaction.orders.map(order => ({
+      order_no: order.order_no || "",
+      trans_type: "30",
+      reference: order.invoice_ref || `REF_${Date.now()}`,
+      walk_in_customer_name: "",
+    }));
+
+    const response = await postCashPayment({
+      total: cartTransaction.grandTotal,
+      items: itemsForBackend,
+      ordersToClear,
+     customerName: clientDetails?.name
+  ? `${clientDetails.name} (prepay)`
+  : "prepay",
+
+      customerPin: clientDetails.kra || "",
+      cashAmount: cashAmount,
+      mpesaTransaction: selectedMpesaTrans ? {
+        name: selectedMpesaTrans.name,
+        TransID: selectedMpesaTrans.TransID,
+        TransAmount: selectedMpesaTrans.TransAmount,
+        TransTime: selectedMpesaTrans.TransTime,
+        Auto: selectedMpesaTrans.Auto,
+      } : null,
+      
+    });
+
+    if (response?.message === "Success") {
+      toast.success(`Pre Payment successful! Invoice #${response.invNo || "N/A"}`);
+setReceiptData({
+    receiptDetails: {
+          response,
+           itemsSent: itemsForBackend,
+      totalAmount: cartTransaction.grandTotal,
+      invoiceNo: response?.invNo || "N/A",
+    },
+    cartTransaction,
+    clientDetails,
+    cashAmount,
+    selectedMpesaTrans,
+  });
+      // Close ALL sessions that were part of this transaction
+      // const sessionIds = cartTransaction.sessions.map(session => session.session_id);
+
+  //     try {
+  //       const closePromises = sessionIds.map(async (sessionId) => {
+  //         try {
+  //           const closeRes = await CloseSession({ session_id: sessionId });
+  //           console.log(`Session ${sessionId} closed:`, closeRes);
+  //           return closeRes;
+  //         } catch (err) {
+  //           console.error(`Failed to close session ${sessionId}:`, err);
+  //           return { error: true, sessionId };
+  //         }
+  //       });
+
+  //       const closeResults = await Promise.all(closePromises);
+
+  //       const failedCloses = closeResults.filter(r => r?.error);
+  //       if (failedCloses.length === 0) {
+  //         toast.success("All sessions closed successfully!");
+  //       await fetchData()
+
+  //       // const latestTransaction = history[0];
+  //     setReceiptData({
+  //   receiptDetails: {
+  //     response,
+  //     itemsSent: itemsForBackend,
+  //     totalAmount: cartTransaction.grandTotal,
+  //     invoiceNo: response?.invNo || "N/A",
+  //   },
+  //   cartTransaction,
+  //   clientDetails,
+  //   cashAmount,
+  //   selectedMpesaTrans,
+  // });
+ 
+  //       //   toast.success(latestTransaction.invNo)
+  //       } else {
+  //         toast.warning(`Payment successful, but ${failedCloses.length} session(s) failed to close.`);
+  //       }
+
+  //       // Refresh active sessions list
+  //       const refreshed = await GetAllActiveSessions();
+  //       if (refreshed.status === "SUCCESS") {
+  //         setActiveSessions(refreshed.sessions || []);
+          
+  //       }
+  //     } catch (err) {
+  //       console.error("Error closing sessions:", err);
+  //       toast.warning("Payment successful, but failed to close sessions.");
+  //     }
+
+      // Clear the cart
+      clearCart();
+    } else {
+      alert(response?.message || "Payment failed");
+    }
+  } catch (err: any) {
+    toast.error("Payment failed: " + (err.message || "Network error"));
+    console.error(err);
+  }
+  finally{
+ 
+    setloadingprepay(false)
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -546,6 +731,7 @@ const reprintHistoryReceipt = async () => {
         }
       }}
       className="bg-white rounded-lg border border-gray-200 p-2 shadow-sm hover:shadow-md hover:border-amber-400 cursor-pointer transition-all"
+     
     >
       <div className="flex justify-between items-start">
         <div>
@@ -759,8 +945,21 @@ const reprintHistoryReceipt = async () => {
                   placeholder="KRA Pin (Optional)"
                   className="w-full px-4 py-3 border rounded-lg mb-6"
                 />
-
+<div className="flex gap-3">
                 <button
+                type="button"
+
+                  onClick={handlePrePayment}
+                  disabled={!cartTransaction || balance > 0 ||loadingprepay}
+                  className={`w-full py-4 font-bold rounded-lg text-lg transition ${
+                    !cartTransaction || balance > 0 ||loadingprepay
+                      ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                      : "bg-rose-600 text-white hover:bg-rose-700"
+                  }`}
+                >
+                 {loadingprepay?"Processing":" Pre Payment"}
+                </button>
+                  <button
                 type="button"
 
                   onClick={handlePayment}
@@ -771,9 +970,9 @@ const reprintHistoryReceipt = async () => {
                       : "bg-rose-600 text-white hover:bg-rose-700"
                   }`}
                 >
-                 {loading?"Processing":" Process Payment"}
+                 {loading?"Processing":" Post Payment"}
                 </button>
-
+</div>
                 <div className="mt-6 space-y-4 text-lg">
                   <div className="flex justify-between">
                     <span>Total Due</span>
