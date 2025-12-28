@@ -17,6 +17,7 @@ import { pdf, PDFDownloadLink } from '@react-pdf/renderer';
 import ReceiptPDF from "./restaurantReceipt";
 
 
+
 interface MpesaTransaction {
   Auto: string;
   name: string;
@@ -42,6 +43,7 @@ export default function PaymentsPage() {
   const [sessionOrdersMap, setSessionOrdersMap] = useState<Record<string, OrderDTO[]>>({});
   const [ordersLoading, setOrdersLoading] = useState<string | null>(null);
   const [showSessionsModal, setShowSessionsModal] = useState(false);
+  const [overpaymentmodal, setoverpaymentmodal] = useState(false)
 const [todel, settodel] = useState("")
   const [cashAmount, setCashAmount] = useState<number>(0);
   const [cashAmountModal, setCashAmountModal] = useState(false);
@@ -280,28 +282,6 @@ const fetchData = async () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const handlePrePayment = async () => {
  
   setloadingprepay(true)
@@ -452,7 +432,15 @@ setReceiptData({
 
 
 
+useEffect(() => {
+  if (!overpaymentmodal) return;
 
+  const timeout = setTimeout(() => {
+    setoverpaymentmodal(false);
+  }, 1000);
+
+  return () => clearTimeout(timeout);
+}, [overpaymentmodal]);
 
 
 
@@ -468,6 +456,9 @@ const handlePayment = async () => {
       price: Number(order.unit_price).toFixed(2),
       total: Number(order.line_total),
     }));
+
+    setoverpaymentmodal(balance < 0);
+   
 
     const ordersToClear = cartTransaction.orders.map(order => ({
       order_no: order.order_no || "",
@@ -987,6 +978,56 @@ const reprintHistoryReceipt = async () => {
                       <span className="font-bold">Ksh {Number(selectedMpesaTrans.TransAmount).toFixed(2)}</span>
                     </div>
                   )}
+
+
+                  
+
+         {overpaymentmodal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    {/* Modal Card */}
+    <div className="w-full max-w-md rounded-xl bg-white shadow-2xl p-6 animate-scaleIn">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between border-b pb-3 mb-4">
+        <h2 className="text-lg font-semibold text-gray-800">
+          Overpayment Detected
+        </h2>
+        <button
+          onClick={() => setoverpaymentmodal(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Content */}
+      <p className="text-gray-700 mb-6">
+        You have an overpayment of{" "}
+        <span className="font-bold text-green-600">
+          Sh {Math.abs(balance).toLocaleString()}
+        </span>
+      </p>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => setoverpaymentmodal(false)}
+          className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="px-5 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
+        >
+          Proceed
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
                   {cashAmount > 0 && (
                     <div className="flex justify-between text-blue-700">
