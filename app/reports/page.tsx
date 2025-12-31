@@ -29,6 +29,7 @@ interface Transaction {
   payments: string | null;
   pitems: string;
   uname: string;
+  ptype?: string; // legacy fallback
 }
 
 interface ParsedTransaction extends Transaction {
@@ -59,9 +60,13 @@ export default function ReportsPage() {
         if (Array.isArray(data)) {
           const parsed = data.map((tx: Transaction) => ({
             ...tx,
-            parsedPayments: tx.payments && tx.payments !== "null" ? JSON.parse(tx.payments) : [],
+            parsedPayments:
+              tx.payments && tx.payments !== "null" && tx.payments
+                ? JSON.parse(tx.payments)
+                : [],
             parsedItems: JSON.parse(tx.pitems),
           }));
+
           setTransactions(parsed);
         } else {
           setTransactions([]);
@@ -76,22 +81,46 @@ export default function ReportsPage() {
     fetchData();
   }, [startDate, endDate]);
 
-  // Aggregated Summary
-  const totalRevenue = transactions.reduce((sum, tx) => sum + parseFloat(tx.ptotal || "0"), 0);
+  // === ACCURATE AGGREGATED SUMMARY USING PTOTAL ===
+  const summary = transactions.reduce(
+    (acc, tx) => {
+      const amount = parseFloat(tx.ptotal || "0");
 
-  const totalCash = transactions.reduce((sum, tx) => {
-    return (
-      sum +
-      tx.parsedPayments
-        .filter((p: Payment) => p.Transtype === "CASH")
-        .reduce((s, p) => s + parseFloat(p.TransAmount?.toString() || "0"), 0)
-    );
-  }, 0);
+      // Check parsed payments first
+      const paymentTypes = tx.parsedPayments.map(
+        (p: Payment) => p.Transtype || p.name
+      );
 
-  const totalMpesa = totalRevenue - totalCash;
+      const isCash =
+        paymentTypes.includes("CASH") ||
+        paymentTypes.some((t: string) => t.toUpperCase().includes("CASH"));
 
+      const isMpesa =
+        paymentTypes.includes("MPESA") ||
+        paymentTypes.some((t: string) => t.toUpperCase().includes("MPESA"));
+
+      // Fallback to legacy ptype if no parsed payments
+      if (tx.parsedPayments.length === 0 && tx.ptype) {
+        if (tx.ptype === "CASH") acc.cash += amount;
+        else if (tx.ptype === "MPESA") acc.mpesa += amount;
+      } else {
+        if (isCash) acc.cash += amount;
+        if (isMpesa) acc.mpesa += amount;
+      }
+
+      acc.totalRevenue += amount;
+      return acc;
+    },
+    { totalRevenue: 0, cash: 0, mpesa: 0 }
+  );
+
+ 
+  const totalCash = summary.cash;
+  const totalMpesa = summary.mpesa;
+ const totalRevenue = totalCash + totalMpesa;
   const totalItemsSold = transactions.reduce(
-    (sum, tx) => sum + tx.parsedItems.reduce((s, i) => s + parseFloat(i.quantity || "0"), 0),
+    (sum, tx) =>
+      sum + tx.parsedItems.reduce((s, i) => s + parseFloat(i.quantity || "0"), 0),
     0
   );
 
@@ -113,7 +142,7 @@ export default function ReportsPage() {
     .slice(0, 8);
 
   const formatCurrency = (amount: number) =>
-    `KES ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    `KES ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleString("en-KE", {
@@ -124,13 +153,14 @@ export default function ReportsPage() {
       minute: "2-digit",
     });
 
-  const reportDateRange = startDate && endDate
-    ? `${new Date(startDate).toLocaleDateString("en-KE")} - ${new Date(endDate).toLocaleDateString("en-KE")}`
-    : startDate
-    ? `From ${new Date(startDate).toLocaleDateString("en-KE")}`
-    : endDate
-    ? `Up to ${new Date(endDate).toLocaleDateString("en-KE")}`
-    : "Today";
+  const reportDateRange =
+    startDate && endDate
+      ? `${new Date(startDate).toLocaleDateString("en-KE")} - ${new Date(endDate).toLocaleDateString("en-KE")}`
+      : startDate
+      ? `From ${new Date(startDate).toLocaleDateString("en-KE")}`
+      : endDate
+      ? `Up to ${new Date(endDate).toLocaleDateString("en-KE")}`
+      : "Today";
 
   return (
     <div className="min-h-screen bg-[#F7F5EE] flex flex-col">
@@ -226,7 +256,7 @@ export default function ReportsPage() {
           {/* Content */}
           {!loading && transactions.length > 0 && (
             <>
-              {/* Summary */}
+              {/* Summary Tab */}
               {activeTab === "summary" && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -270,7 +300,9 @@ export default function ReportsPage() {
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-[#c9184a]">
-                      {activeTab === "transactions" ? `All Transactions (${transactions.length})` : "Itemized Sales Report"}
+                      {activeTab === "transactions"
+                        ? `All Transactions (${transactions.length})`
+                        : "Itemized Sales Report"}
                     </h2>
                   </div>
                   <div className="overflow-x-auto">
@@ -309,8 +341,10 @@ export default function ReportsPage() {
                               </td>
                               <td className="px-6 py-4">
                                 {tx.parsedPayments.length > 0
-                                  ? tx.parsedPayments.map((p: Payment) => p.name || p.Transtype).join(" + ")
-                                  : "CASH"}
+                                  ? tx.parsedPayments
+                                      .map((p: Payment) => p.name || p.Transtype)
+                                      .join(" + ")
+                                  : tx.ptype || "CASH"}
                               </td>
                               <td className="px-6 py-4 text-right font-bold text-[#c9184a]">
                                 {formatCurrency(parseFloat(tx.ptotal))}

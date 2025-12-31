@@ -40,7 +40,7 @@ export default function Tables() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "available":
-        return "bg-green-50 border-green-300 text-green-800 shadow-green-100";
+        return "bg-green-50 border-green-400 text-green-800 shadow-green-100";
       case "partial":
         return "bg-amber-50 border-amber-300 text-amber-800 shadow-amber-100";
       case "occupied":
