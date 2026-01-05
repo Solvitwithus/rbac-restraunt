@@ -45,8 +45,9 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("summary");
 
   // Date filters
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split("T")[0]);;
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,42 +83,36 @@ export default function ReportsPage() {
   }, [startDate, endDate]);
 
   // === ACCURATE AGGREGATED SUMMARY USING PTOTAL ===
-  const summary = transactions.reduce(
-    (acc, tx) => {
-      const amount = parseFloat(tx.ptotal || "0");
+const summary = transactions.reduce(
+  (acc, tx) => {
+    const txTotal = parseFloat(tx.ptotal || "0");
+    acc.totalRevenue += txTotal;
 
-      // Check parsed payments first
-      const paymentTypes = tx.parsedPayments.map(
-        (p: Payment) => p.Transtype || p.name
-      );
+    if (tx.parsedPayments.length > 0) {
+      tx.parsedPayments.forEach((p: Payment) => {
+        const amt = parseFloat(p.TransAmount as string || "0");
+        const type = (p.Transtype || p.name || "").toUpperCase();
 
-      const isCash =
-        paymentTypes.includes("CASH") ||
-        paymentTypes.some((t: string) => t.toUpperCase().includes("CASH"));
+        if (type.includes("CASH")) acc.cash += amt;
+        if (type.includes("MPESA")) acc.mpesa += amt;
+      });
+    } 
+    // fallback for legacy records
+    else if (tx.ptype) {
+      if (tx.ptype === "CASH") acc.cash += txTotal;
+      if (tx.ptype === "MPESA") acc.mpesa += txTotal;
+    }
 
-      const isMpesa =
-        paymentTypes.includes("MPESA") ||
-        paymentTypes.some((t: string) => t.toUpperCase().includes("MPESA"));
+    return acc;
+  },
+  { totalRevenue: 0, cash: 0, mpesa: 0 }
+);
 
-      // Fallback to legacy ptype if no parsed payments
-      if (tx.parsedPayments.length === 0 && tx.ptype) {
-        if (tx.ptype === "CASH") acc.cash += amount;
-        else if (tx.ptype === "MPESA") acc.mpesa += amount;
-      } else {
-        if (isCash) acc.cash += amount;
-        if (isMpesa) acc.mpesa += amount;
-      }
-
-      acc.totalRevenue += amount;
-      return acc;
-    },
-    { totalRevenue: 0, cash: 0, mpesa: 0 }
-  );
 
  
   const totalCash = summary.cash;
   const totalMpesa = summary.mpesa;
- const totalRevenue = totalCash + totalMpesa;
+ const totalRevenue = summary.totalRevenue;
   const totalItemsSold = transactions.reduce(
     (sum, tx) =>
       sum + tx.parsedItems.reduce((s, i) => s + parseFloat(i.quantity || "0"), 0),
