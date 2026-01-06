@@ -210,7 +210,7 @@ const fetchData = async () => {
 
   const handleMergeAndAddToCart = async () => {
     if (selectedSessionsInModal.size === 0) {
-      alert("Select at least one session.");
+      toast.warning("Select at least one session.");
       return;
     }
 
@@ -235,7 +235,7 @@ const fetchData = async () => {
     const allOrders = selectedSessions.flatMap(s => sessionOrdersMap[s.session_id] || []);
 
     if (allOrders.length === 0) {
-      alert("No orders found.");
+      toast.warning("No orders found! Click the order to load");
       return;
     }
 
@@ -392,7 +392,7 @@ setReceiptData({
       // Clear the cart
       clearCart();
     } else {
-      alert(response?.message || "Payment failed");
+      toast.error(response?.message || "Payment failed");
     }
   } catch (err: any) {
     toast.error("Payment failed: " + (err.message || "Network error"));
@@ -541,7 +541,8 @@ const handlePayment = async () => {
       // Clear the cart
       clearCart();
     } else {
-      alert(response?.message || "Payment failed");
+    
+      toast.error(response?.message || "Payment failed")
     }
   } catch (err: any) {
     toast.error("Payment failed: " + (err.message || "Network error"));
