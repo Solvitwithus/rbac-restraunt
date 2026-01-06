@@ -1032,7 +1032,7 @@ const reprintHistoryReceipt = async () => {
 
                   {cashAmount > 0 && (
                     <div className="flex justify-between text-blue-700">
-                      <span>Tendered</span>
+                      <span>Cash Tendered</span>
                       <span className="font-bold">Ksh {cashAmount.toFixed(2)}</span>
                     </div>
                     
@@ -1087,7 +1087,8 @@ const reprintHistoryReceipt = async () => {
             <input
               type="number"
               value={cashAmount}
-              onChange={e => setCashAmount(Number(e.target.value) || 0)}
+              autoFocus
+              onChange={e => setCashAmount(Number(e.target.value))}
               className="w-full px-6 py-5 text-3xl text-center border-2 rounded-xl"
               placeholder="0.00"
               min="0"

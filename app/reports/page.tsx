@@ -1,9 +1,10 @@
 "use client";
-
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import React, { useEffect, useState } from "react";
 import Menu from "../components/posmenu";
 import { GetProcessedTransactions } from "../hooks/access";
-import { Loader2, Receipt, Package, TrendingUp, Calendar } from "lucide-react";
+import { Loader2, Receipt, Package, TrendingUp, Calendar, FileDown } from "lucide-react";
+import ReportsPdf from "../components/ReportsPdf";
 
 interface Payment {
   name: string;
@@ -157,6 +158,8 @@ const summary = transactions.reduce(
       ? `Up to ${new Date(endDate).toLocaleDateString("en-KE")}`
       : "Today";
 
+
+
   return (
     <div className="min-h-screen bg-[#F7F5EE] flex flex-col">
       <Menu />
@@ -205,6 +208,18 @@ const summary = transactions.reduce(
                   Clear Filters
                 </button>
               </div>
+
+              <PDFDownloadLink
+  document={<ReportsPdf transactions={transactions} />}
+  fileName={`sales-report-${startDate}-to-${endDate}.pdf`}
+>
+  {({ loading }) => (
+    <button className="flex items-center gap-2 text-red-600">
+      <FileDown className="w-5 h-5" />
+      {loading ? "Generating PDF..." : "Download PDF"}
+    </button>
+  )}
+</PDFDownloadLink>
             </div>
           </div>
 
