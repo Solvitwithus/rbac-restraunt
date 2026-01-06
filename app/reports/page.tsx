@@ -1,10 +1,25 @@
 "use client";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+
 import React, { useEffect, useState } from "react";
 import Menu from "../components/posmenu";
 import { GetProcessedTransactions } from "../hooks/access";
 import { Loader2, Receipt, Package, TrendingUp, Calendar, FileDown } from "lucide-react";
 import ReportsPdf from "../components/ReportsPdf";
+
+// Dynamically import ONLY the PDFDownloadLink (client-only)
+import dynamic from "next/dynamic";
+
+const ReportPdfButton = dynamic(
+  () => import("../components/ReportPdfButton"),
+  {
+    ssr: false,
+    loading: () => (
+      <button className="flex items-center gap-2 px-6 py-3 bg-gray-300 text-gray-600 rounded-xl">
+        Preparing PDF…
+      </button>
+    ),
+  }
+);
 
 interface Payment {
   name: string;
@@ -209,17 +224,12 @@ const summary = transactions.reduce(
                 </button>
               </div>
 
-              <PDFDownloadLink
-  document={<ReportsPdf transactions={transactions} />}
-  fileName={`sales-report-${startDate}-to-${endDate}.pdf`}
->
-  {({ loading }) => (
-    <button className="flex items-center gap-2 text-red-600">
-      <FileDown className="w-5 h-5" />
-      {loading ? "Generating PDF..." : "Download PDF"}
-    </button>
-  )}
-</PDFDownloadLink>
+     <ReportPdfButton
+  transactions={transactions}
+  startDate={startDate}
+  endDate={endDate}
+/>
+
             </div>
           </div>
 
