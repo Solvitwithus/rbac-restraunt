@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Menu from "../components/posmenu";
 import { GetProcessedTransactions } from "../hooks/access";
 import { Loader2, Receipt, Package, TrendingUp, Calendar, FileDown } from "lucide-react";
@@ -59,7 +59,7 @@ export default function ReportsPage() {
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("summary");
-
+const [searchParam, setsearchParam] = useState<string>("")
   // Date filters
 
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split("T")[0]);;
@@ -97,6 +97,35 @@ export default function ReportsPage() {
     };
     fetchData();
   }, [startDate, endDate]);
+
+
+const searchedTransactions = useMemo(() => {
+  if (!searchParam.trim()) return transactions;
+
+  const term = searchParam.toLowerCase();
+
+  return transactions.filter((tx) => {
+    return (
+      tx.order_no?.toLowerCase().includes(term) ||
+      tx.invNo?.toLowerCase().includes(term) ||
+      tx.customername?.toLowerCase().includes(term) ||
+      tx.uname?.toLowerCase().includes(term) ||
+      tx.ptotal?.toString().includes(term) ||
+
+      // search payment types
+      tx.parsedPayments.some(
+        (p) =>
+          p.name?.toLowerCase().includes(term) ||
+          p.Transtype?.toLowerCase().includes(term)
+      ) ||
+
+      // search item names
+      tx.parsedItems.some((i) =>
+        i.item_option?.toLowerCase().includes(term)
+      )
+    );
+  });
+}, [transactions, searchParam]);
 
   // === ACCURATE AGGREGATED SUMMARY USING PTOTAL ===
 const summary = transactions.reduce(
@@ -191,8 +220,8 @@ const summary = transactions.reduce(
           </div>
 
           {/* Date Filters */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Filter by Date Range</h3>
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 flex">
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
@@ -200,7 +229,7 @@ const summary = transactions.reduce(
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
+                  className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
                 />
               </div>
               <div>
@@ -209,26 +238,28 @@ const summary = transactions.reduce(
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
+                  className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                 <input
+                  type="text"
+                  value={searchParam}
+                  onChange={(e) => setsearchParam(e.target.value)}
+                  className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
                 />
               </div>
               <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setStartDate("");
-                    setEndDate("");
-                  }}
-                  className="w-full py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition"
-                >
-                  Clear Filters
-                </button>
-              </div>
-
-     <ReportPdfButton
+              
+                  <ReportPdfButton
   transactions={transactions}
   startDate={startDate}
   endDate={endDate}
 />
+              </div>
+
+   
 
             </div>
           </div>
@@ -397,6 +428,24 @@ const summary = transactions.reduce(
           )}
         </div>
       </div>
+      {
+        searchedTransactions && (
+          <div>
+            {/* display some info in a nice structure */}
+<span>
+  Search for <strong>{searchParam}</strong> in{" "}
+  {[
+    ...new Set(
+      searchedTransactions.flatMap(tx =>
+        tx.parsedItems.map(i => i.item_option)
+      )
+    ),
+  ].join(", ")}
+</span>
+
+          </div>
+        )
+      }
     </div>
   );
 }

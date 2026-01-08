@@ -21,10 +21,10 @@ export default function ReportPdfButton({
       {({ loading }) => (
         <button
           disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 bg-[#c9184a] text-white rounded-xl hover:bg-[#a11540] transition disabled:opacity-70"
+          className="flex items-center gap-2 px-6 py-3 text-sm bg-[#c9184a] text-white rounded-xl hover:bg-[#a11540] transition disabled:opacity-70"
         >
           <FileDown className="w-5 h-5" />
-          {loading ? "Generating PDF..." : "Download PDF Report"}
+          {loading ? "Generating PDF..." : "PDF Report"}
         </button>
       )}
     </PDFDownloadLink>
