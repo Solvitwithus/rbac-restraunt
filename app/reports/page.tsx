@@ -166,7 +166,7 @@ const summary = transactions.reduce(
 
   // Top Selling Items
   const itemSalesMap = new Map<string, { quantity: number; revenue: number }>();
-  transactions.forEach((tx) => {
+  searchedTransactions.forEach((tx) => {
     tx.parsedItems.forEach((item: Item) => {
       const key = item.item_option;
       const current = itemSalesMap.get(key) || { quantity: 0, revenue: 0 };
@@ -223,6 +223,8 @@ const summary = transactions.reduce(
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 flex">
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:flex md:justify-between">
+                <div className="flex gap-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                 <input
@@ -241,7 +243,8 @@ const summary = transactions.reduce(
                   className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
                 />
               </div>
-              <div>
+              {(activeTab === "transactions" || activeTab === "itemized") &&  (
+                <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
                  <input
                   type="text"
@@ -250,6 +253,10 @@ const summary = transactions.reduce(
                   className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
                 />
               </div>
+              ) }
+              
+              </div>
+              <div>
               <div className="flex items-end">
               
                   <ReportPdfButton
@@ -258,9 +265,10 @@ const summary = transactions.reduce(
   endDate={endDate}
 />
               </div>
-
+</div>
    
 
+            </div>
             </div>
           </div>
 
@@ -382,7 +390,7 @@ const summary = transactions.reduce(
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {activeTab === "transactions" &&
-                          transactions.map((tx) => (
+                          searchedTransactions.map((tx) => (
                             <tr key={tx.id} className="hover:bg-pink-50">
                               <td className="px-6 py-4">{formatDate(tx.pdate)}</td>
                               <td className="px-6 py-4 font-medium">{tx.order_no}</td>
@@ -428,24 +436,7 @@ const summary = transactions.reduce(
           )}
         </div>
       </div>
-      {
-        searchedTransactions && (
-          <div>
-            {/* display some info in a nice structure */}
-<span>
-  Search for <strong>{searchParam}</strong> in{" "}
-  {[
-    ...new Set(
-      searchedTransactions.flatMap(tx =>
-        tx.parsedItems.map(i => i.item_option)
-      )
-    ),
-  ].join(", ")}
-</span>
-
-          </div>
-        )
-      }
+      
     </div>
   );
 }
