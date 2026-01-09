@@ -1,3 +1,4 @@
+"use client"
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
@@ -10,7 +11,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: "center",
     fontWeight: "bold",
-    fontColor:"red"
+    color: "red", // ✅ FIXED
   },
   section: {
     marginBottom: 12,
@@ -56,7 +57,11 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function ReportsPdf({ transactions }: { transactions: any[] }) {
+export default function ReportsPdf({
+  transactions,
+}: {
+  transactions: any[];
+}) {
   const grandTotal = transactions.reduce(
     (sum, tx) => sum + parseFloat(tx.ptotal || "0"),
     0
@@ -73,7 +78,6 @@ export default function ReportsPdf({ transactions }: { transactions: any[] }) {
 
           return (
             <View key={index} style={styles.section}>
-              {/* TRANSACTION INFO */}
               <View style={styles.row}>
                 <Text style={styles.label}>Invoice No:</Text>
                 <Text style={styles.value}>{tx.invNo}</Text>
@@ -108,7 +112,6 @@ export default function ReportsPdf({ transactions }: { transactions: any[] }) {
                 </Text>
               </View>
 
-              {/* ITEMS TABLE */}
               <View style={styles.tableHeader}>
                 <Text style={styles.cellItem}>Item</Text>
                 <Text style={styles.cellQty}>Qty</Text>
@@ -125,7 +128,6 @@ export default function ReportsPdf({ transactions }: { transactions: any[] }) {
                 </View>
               ))}
 
-              {/* TRANSACTION TOTAL */}
               <Text style={styles.txTotal}>
                 Transaction Total: KES {parseFloat(tx.ptotal).toFixed(2)}
               </Text>
@@ -133,7 +135,6 @@ export default function ReportsPdf({ transactions }: { transactions: any[] }) {
           );
         })}
 
-        {/* GRAND TOTAL */}
         <Text style={styles.grandTotal}>
           Grand Total Revenue: KES {grandTotal.toFixed(2)}
         </Text>

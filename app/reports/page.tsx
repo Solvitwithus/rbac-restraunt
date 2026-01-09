@@ -3,8 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Menu from "../components/posmenu";
 import { GetProcessedTransactions } from "../hooks/access";
-import { Loader2, Receipt, Package, TrendingUp, Calendar, FileDown } from "lucide-react";
-import ReportsPdf from "../components/ReportsPdf";
+import { Loader2, Receipt, Package, TrendingUp, Calendar } from "lucide-react";
+
 
 // Dynamically import ONLY the PDFDownloadLink (client-only)
 import dynamic from "next/dynamic";
@@ -219,58 +219,64 @@ const summary = transactions.reduce(
             </p>
           </div>
 
-          {/* Date Filters */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 flex">
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:flex md:justify-between">
-                <div className="flex gap-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
-                />
-              </div>
-              {(activeTab === "transactions" || activeTab === "itemized") &&  (
-                <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                 <input
-                  type="text"
-                  value={searchParam}
-                  onChange={(e) => setsearchParam(e.target.value)}
-                  className="w-fit px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a]"
-                />
-              </div>
-              ) }
-              
-              </div>
-              <div>
-              <div className="flex items-end">
-              
-                  <ReportPdfButton
-  transactions={transactions}
-  startDate={startDate}
-  endDate={endDate}
-/>
-              </div>
-</div>
-   
+        {/* Date Filters & Controls */}
+<div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+    {/* Left: Date Inputs + Conditional Search */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Start Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Start Date
+        </label>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a] transition"
+        />
+      </div>
 
-            </div>
-            </div>
-          </div>
+      {/* End Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          End Date
+        </label>
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a] transition"
+        />
+      </div>
+
+      {/* Search - Only shown in Transactions or Itemized tabs */}
+      {(activeTab === "transactions" || activeTab === "itemized") && (
+        <div className="sm:col-span-2 lg:col-span-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Search
+          </label>
+          <input
+            type="text"
+            placeholder="Order #, invoice, customer, item..."
+            value={searchParam}
+            onChange={(e) => setsearchParam(e.target.value)}
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c9184a] focus:border-[#c9184a] transition placeholder-gray-400"
+          />
+        </div>
+      )}
+    </div>
+
+    {/* Right: PDF Button - Aligned to bottom */}
+    <div className="flex justify-start lg:justify-end">
+      <ReportPdfButton
+        transactions={searchedTransactions}
+        startDate={startDate}
+        endDate={endDate}
+      />
+    </div>
+  </div>
+</div>
 
           {/* Tabs */}
           <div className="flex justify-center mb-8 overflow-x-auto pb-2">
