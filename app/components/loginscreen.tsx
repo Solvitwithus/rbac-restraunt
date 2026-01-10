@@ -58,7 +58,7 @@ import { Role } from "./types";
 export default function LoginCard() {
   const router = useRouter();
   const {setPermissions,clearPermissions} = usePermissions()
-const {token,clearSession,setSession,} = useLoginSession()
+const {token,setSession,} = useLoginSession()
 
 const {fetchRoles} = useInternalHooks()
   const [userName, setUserName] = useState<string>("");
@@ -137,12 +137,12 @@ setSession(res)
    
 
     // 6️⃣ Redirect
-    if (firstPage) {
+    if (firstPage && token) {
       router.push(pageMap[firstPage]);
       toast.success("Login successful!");
     } else {
-      router.push("/"); // fallback page
-         toast.warning("You do not have access permissions. Please contact your supervisor!");
+     ; // fallback page
+         toast.warning("Invalid Credentials");
     }
 
     

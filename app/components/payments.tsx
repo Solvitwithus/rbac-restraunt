@@ -15,6 +15,7 @@ import { DiningSessionDTO, OrderDTO, PosPaymentResponse } from "./types";
 import { toast } from "sonner";
 import { pdf, PDFDownloadLink } from '@react-pdf/renderer';
 import ReceiptPDF from "./restaurantReceipt";
+import { useLoginSession } from "../stores/useAuth";
 
 
 
@@ -47,6 +48,7 @@ export default function PaymentsPage() {
 const [todel, settodel] = useState("")
   const [cashAmount, setCashAmount] = useState<number>(0);
   const [cashAmountModal, setCashAmountModal] = useState(false);
+  const {user} = useLoginSession();
 const [receiptData, setReceiptData] = useState<{
   receiptDetails: {
     response: any;
@@ -281,7 +283,6 @@ const fetchData = async () => {
 
 
 
-
 const handlePrePayment = async () => {
  
   setloadingprepay(true)
@@ -312,6 +313,8 @@ const handlePrePayment = async () => {
   : "prepay",
 
       customerPin: clientDetails.kra || "",
+      user:user?.username,
+      userId:user?.id,
       cashAmount: cashAmount,
       mpesaTransaction: selectedMpesaTrans ? {
         name: selectedMpesaTrans.name,
@@ -399,7 +402,7 @@ setReceiptData({
     console.error(err);
   }
   finally{
- 
+ toast.warning(`your uid ${user?.id}`)
     setloadingprepay(false)
   }
 };
@@ -472,7 +475,10 @@ const handlePayment = async () => {
       items: itemsForBackend,
       ordersToClear,
       customerName: clientDetails.name || "",
+      
       customerPin: clientDetails.kra || "",
+      user:user?.username,
+      userId:user?.id,
       cashAmount: cashAmount,
       mpesaTransaction: selectedMpesaTrans ? {
         name: selectedMpesaTrans.name,

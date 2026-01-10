@@ -474,10 +474,13 @@ export async function postCashPayment({
   ordersToClear,
   customerName = "",
   customerPin = "",
+  user,
+  userId,
   cashAmount = 0,
   mpesaTransaction = null, // { name, TransID, TransAmount, TransTime, Auto }
 }: {
   total: number;
+  userId:string;
   items: Array<{
     quantity: string;
     item_option: string;
@@ -494,6 +497,7 @@ export async function postCashPayment({
   customerName?: string;
   customerPin?: string;
   cashAmount?: number;
+  user:string;
   mpesaTransaction?: {
     name: string;
     TransID: string;
@@ -507,7 +511,7 @@ export async function postCashPayment({
 
     formData.append("tp", "booking-cash-payment");
     formData.append("cp", "0_");
-    formData.append("id", "104");
+    formData.append("id", userId);
     formData.append("ttp", "CASH");
     formData.append("total", total.toString());
 
@@ -572,7 +576,7 @@ export async function postCashPayment({
 
     formData.append("posdesc", JSON.stringify(posdescItems));
 
-    formData.append("uname", "digisoft_suppor");
+    formData.append("uname", user);
     formData.append("cpbooking_id", "");
     formData.append("cust_name", customerName);
     formData.append("cust_pin", customerPin);
@@ -580,7 +584,7 @@ export async function postCashPayment({
 
     formData.append("orders_to_clear", JSON.stringify(ordersToClear));
 
-    const response = await axios.postForm("https://marvel.digerp.com/test/process.php", formData);
+    const response = await axios.postForm("https://res.digerp.com/process.php", formData);
 
     return response.data;
   } catch (error: any) {
@@ -609,7 +613,7 @@ export async function GetProcessedTransactions({
     formData.append("end_date", endDate || today);
 
     const response = await axios.postForm(
-      "https://marvel.digerp.com/test/process.php",
+      "https://res.digerp.com/process.php",
       formData
     );
 
