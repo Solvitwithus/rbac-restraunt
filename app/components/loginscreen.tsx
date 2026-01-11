@@ -137,7 +137,7 @@ setSession(res)
    
 
     // 6️⃣ Redirect
-    if (firstPage && token) {
+    if (firstPage && res) {
       router.push(pageMap[firstPage]);
       toast.success("Login successful!");
     } else {
